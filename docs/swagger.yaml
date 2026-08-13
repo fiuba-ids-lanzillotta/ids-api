@@ -1,0 +1,536 @@
+openapi: 3.0.0
+info:
+  title: IDS Lanzillotta - API
+  description: |-
+    API REST que provee los datos de la página informativa de la cátedra de
+    Lanzillotta de Introducción al Desarrollo de Software (FIUBA). Es el backend
+    que consume el frontend `ids-web`.
+
+    Los endpoints de lectura (docentes y cronograma) son públicos.
+    Los endpoints de escritura requieren un usuario con rol `admin` autenticado
+    vía JWT (`Authorization: Bearer <token>`).
+
+    Todos los endpoints cuelgan del prefijo `/ids_api`.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/ids_api
+tags:
+  - name: Auth
+    description: Registro, login y usuario autenticado
+  - name: Docentes
+    description: Equipo docente
+  - name: Cronograma
+    description: Cronograma de clases y sus contenidos
+paths:
+  /login:
+    post:
+      summary: Iniciar sesión del admin y obtener un JWT
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginBody'
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /me:
+    get:
+      summary: Identidad del admin autenticado
+      tags: [Auth]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Identidad asociada al token enviado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identidad'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /docentes:
+    get:
+      summary: Listar el equipo docente
+      tags: [Docentes]
+      responses:
+        '200':
+          description: Listado de docentes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Docente'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Crear un docente (solo admin)
+      tags: [Docentes]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocenteBody'
+      responses:
+        '201':
+          description: Docente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Docente'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /docentes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      summary: Obtener un docente por id
+      tags: [Docentes]
+      responses:
+        '200':
+          description: Detalle del docente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Docente'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Actualizar un docente (solo admin)
+      tags: [Docentes]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocenteBody'
+      responses:
+        '200':
+          description: Docente actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Docente'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Eliminar un docente (solo admin)
+      tags: [Docentes]
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /cronograma/clases:
+    get:
+      summary: Listar todas las clases (lista plana)
+      tags: [Cronograma]
+      responses:
+        '200':
+          description: Listado de clases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Clase'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /cronograma/clases/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    put:
+      summary: Actualizar una clase (solo admin)
+      tags: [Cronograma]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaseBody'
+      responses:
+        '200':
+          description: Clase actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Clase'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /cronograma/csv:
+    post:
+      summary: Alta bulk del cronograma desde CSV (solo admin)
+      description: |-
+        Carga el cronograma completo desde un CSV (multipart/form-data, campo `archivo`).
+        Solo funciona si el cronograma está vacío; de lo contrario devuelve 409.
+        Formato de cada fila: `semana, fecha (DD/MM/AAAA), tipo, titulo` seguido de
+        pares `descripción, hito` por cada contenido.
+      tags: [Cronograma]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvUpload'
+      responses:
+        '201':
+          description: Cronograma creado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Clase'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Reemplazo total del cronograma desde CSV (solo admin)
+      description: |-
+        Borra el cronograma existente y lo reemplaza por el del CSV
+        (multipart/form-data, campo `archivo`). Mismo formato que el POST.
+      tags: [Cronograma]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvUpload'
+      responses:
+        '200':
+          description: Cronograma reemplazado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Clase'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      summary: Exportar el cronograma actual como CSV
+      tags: [Cronograma]
+      responses:
+        '200':
+          description: CSV del cronograma
+          content:
+            text/csv:
+              schema:
+                type: string
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    Identidad:
+      type: object
+      description: Identidad del admin autenticado (derivada del JWT)
+      properties:
+        usuario:
+          type: string
+          example: admin
+        rol:
+          type: string
+          enum: [admin]
+          example: admin
+    LoginBody:
+      type: object
+      required: [usuario, password]
+      properties:
+        usuario:
+          type: string
+          example: admin
+        password:
+          type: string
+          format: password
+          example: admin123
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT firmado con HS256. Enviar en el header Authorization: Bearer <token>
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        usuario:
+          $ref: '#/components/schemas/Identidad'
+    RolDocente:
+      type: string
+      description: Rol del docente
+      enum: [Profesor, Ayudante, Colaborador]
+      example: Profesor
+    Docente:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nombre:
+          type: string
+          example: Bruno
+        apellido:
+          type: string
+          example: Lanzillotta
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: blanzillotta@fi.uba.ar
+        rol:
+          $ref: '#/components/schemas/RolDocente'
+        foto:
+          type: string
+          nullable: true
+          description: Foto del docente como data URI base64 (o null si no tiene)
+          example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+    DocenteBody:
+      type: object
+      required: [nombre, apellido, rol]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Bruno
+        apellido:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Lanzillotta
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: blanzillotta@fi.uba.ar
+        rol:
+          $ref: '#/components/schemas/RolDocente'
+        foto:
+          type: string
+          nullable: true
+          description: Imagen a subir, como data URI base64. Si se omite, se conserva la actual.
+          example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+    Contenido:
+      type: object
+      description: Un ítem de contenido de la clase. `hito` lo marca como relevante del día.
+      properties:
+        texto:
+          type: string
+          example: Introducción a Linux (FileSystem, carpetas)
+        hito:
+          type: boolean
+          default: false
+          example: true
+    Clase:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        semana:
+          type: integer
+          example: 1
+        fecha:
+          type: string
+          format: date
+          example: '2026-03-09'
+        tipo:
+          type: string
+          enum: [Presencial, Virtual, Feriado, 'Sin clases']
+          example: Presencial
+        titulo:
+          type: string
+          nullable: true
+          example: Introducción a la materia
+        contenidos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contenido'
+    ClaseBody:
+      type: object
+      required: [semana, fecha, tipo]
+      properties:
+        semana:
+          type: integer
+          minimum: 1
+          example: 1
+        fecha:
+          type: string
+          format: date
+          description: Fecha en formato ISO (YYYY-MM-DD)
+          example: '2026-03-09'
+        tipo:
+          type: string
+          enum: [Presencial, Virtual, Feriado, 'Sin clases']
+          example: Presencial
+        titulo:
+          type: string
+          nullable: true
+          example: Introducción a la materia
+        contenidos:
+          type: array
+          description: Lista de contenidos. Cada item puede ser un string o un objeto { texto, hito }.
+          items:
+            $ref: '#/components/schemas/Contenido'
+    CsvUpload:
+      type: object
+      required: [archivo]
+      properties:
+        archivo:
+          type: string
+          format: binary
+          description: Archivo CSV del cronograma
+    Errores:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: invalid.credentials
+        message:
+          type: string
+          example: Credenciales inválidas
+        level:
+          type: string
+          enum: [info, warning, error]
+          example: error
+        description:
+          type: string
+          example: El email o password son incorrectos
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+  responses:
+    NoContent:
+      description: Sin contenido
+    BadRequest:
+      description: Solicitud inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    Unauthorized:
+      description: No autenticado (token faltante, inválido o expirado)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    Forbidden:
+      description: Sin permisos suficientes
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    Conflict:
+      description: Conflicto (por ejemplo, email ya registrado)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    InternalServerError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT firmado con HS256. Obtenido en POST /login.

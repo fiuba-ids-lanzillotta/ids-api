@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Colección de Bruno (local, contiene tokens)
+bruno/
