@@ -1,8 +1,11 @@
-from ..constants import ERROR_CODE_DOCENTE_NOT_FOUND
+from ..constants import ERROR_CODE_DOCENTE_NOT_FOUND, ROLES_DOCENTE
 from ..utils import construir_error_api
 from ..validators.docentes import validar_body_docente
 from .storage import subir_imagen_base64, obtener_imagen_base64, borrar_imagen
 from .. import db
+
+# Prioridad de orden por rol: Profesor, luego Ayudantes, luego Colaboradores.
+_ORDEN_ROL = {rol: i for i, rol in enumerate(ROLES_DOCENTE)}
 
 
 def construir_docente_dto(docente: dict) -> dict:
@@ -18,8 +21,11 @@ def construir_docente_dto(docente: dict) -> dict:
 
 
 def listar_docentes() -> list[dict]:
-    """Retorna todos los docentes."""
-    return [construir_docente_dto(d) for d in db.obtener_todos_los_docentes()]
+    """Retorna los docentes ordenados por rol (Profesor, Ayudante, Colaborador) y luego por id."""
+    docentes = db.obtener_todos_los_docentes()
+    docentes.sort(key=lambda d: (_ORDEN_ROL.get(d['rol'], len(ROLES_DOCENTE)), d['id']))
+
+    return [construir_docente_dto(d) for d in docentes]
 
 
 def buscar_docente_por_id(docente_id: int) -> dict:
