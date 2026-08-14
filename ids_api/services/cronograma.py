@@ -153,26 +153,38 @@ def _reemplazar_cronograma(clases: list[dict]) -> None:
 
 
 def exportar_cronograma_csv() -> str:
-    """Serializa el cronograma actual a CSV (mismo formato que acepta el import)."""
-    salida = io.StringIO()
-    escritor = csv.writer(salida)
-    escritor.writerow(CSV_HEADER)
+    """
+    Serializa el cronograma actual a CSV (mismo formato que acepta el import).
 
+    Los campos de texto (tipo, titulo y cada descripción de contenido) se
+    exportan SIEMPRE entre comillas dobles, para representarlos como strings de
+    forma consistente. Los demás campos (semana, fecha y el hito booleano) van
+    sin comillas.
+    """
     por_clase = _agrupar_contenidos(db.obtener_todos_los_contenidos())
 
-    for clase in db.obtener_todas_las_clases():
-        fecha = clase['fecha']
-        fecha_csv = _fecha_iso_a_csv(fecha)
+    lineas = [','.join(CSV_HEADER)]
 
-        fila = [clase['semana'], fecha_csv, clase['tipo'], clase['titulo'] or '']
+    for clase in db.obtener_todas_las_clases():
+        campos = [
+            str(clase['semana']),
+            _fecha_iso_a_csv(clase['fecha']),
+            _entrecomillar(clase['tipo']),
+            _entrecomillar(clase['titulo']) if clase['titulo'] else '',
+        ]
 
         for contenido in por_clase.get(clase['id'], []):
-            fila.append(contenido['texto'])
-            fila.append('True' if contenido['hito'] else 'False')
+            campos.append(_entrecomillar(contenido['texto']))
+            campos.append('True' if contenido['hito'] else 'False')
 
-        escritor.writerow(fila)
+        lineas.append(','.join(campos))
 
-    return salida.getvalue()
+    return '\r\n'.join(lineas) + '\r\n'
+
+
+def _entrecomillar(valor: str) -> str:
+    """Devuelve el valor como campo CSV entre comillas dobles, escapando las internas."""
+    return '"' + str(valor).replace('"', '""') + '"'
 
 
 def _fecha_iso_a_csv(fecha) -> str:
