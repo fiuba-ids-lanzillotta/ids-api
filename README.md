@@ -211,6 +211,13 @@ Todos cuelgan del prefijo `/ids_api`. Las lecturas son públicas; las escrituras
 | PUT    | `/cronograma/csv`                 | Admin       | Reemplaza todo el cronograma desde CSV   |
 | GET    | `/cronograma/csv`                 | Público     | Exporta el cronograma actual como CSV    |
 
+### Período de clases y autocompletado
+
+El cuatrimestre se define por constantes (`INICIO_CLASES`, `FIN_CLASES` en `constants.py`): del **lunes 17/08/2026** al **lunes 30/11/2026**. Hay **2 clases por semana** (lunes y miércoles), lo que da **16 semanas → 32 clases**.
+
+- Al **importar** (POST/PUT) o al **exportar/listar** (GET), las fechas lunes/miércoles del período que no estén cargadas se **completan automáticamente** con una clase default: `tipo = Virtual`, `titulo = "A definir"`, sin contenidos. En el import se persisten; en el GET solo se devuelven.
+- Validaciones sobre cada fila: la `fecha` debe ser **lunes o miércoles**, estar **dentro del período**, y la `semana` informada debe **coincidir** con la que corresponde a esa fecha.
+
 ### Formato del CSV del cronograma
 
 El CSV se envía como archivo (`multipart/form-data`, campo `archivo`). Cada fila:
@@ -221,13 +228,13 @@ semana, fecha, tipo, titulo, <descripción1>, <hito1>, <descripción2>, <hito2>,
 
 - **Obligatorios**: `semana`, `fecha` (formato `DD/MM/AAAA`) y `tipo` (`Presencial` / `Virtual` / `Feriado` / `Sin clases`).
 - `titulo` puede quedar vacío; `contenidos` puede estar vacío (p. ej. en feriados).
-- Después de `titulo`, los contenidos van en **pares** `descripción, hito` (hito = `True`/`False`). Las descripciones con comas se encierran entre comillas.
+- Después de `titulo`, los contenidos van en **pares** `descripción, hito` (hito = `True`/`False`). Los campos de texto (tipo, titulo, descripciones) se exportan siempre entre comillas dobles.
 - El `POST` solo carga si el cronograma está vacío (si no, `409`); el `PUT` reemplaza todo.
 
 Ejemplo de fila:
 
 ```
-10,11/05/2026,Virtual,HTML y CSS,"HTML: estructura y etiquetas básicas",False,"CSS: clases e IDs, atributos básicos",False
+1,17/08/2026,"Presencial","Introducción a la materia","Presentación de la materia",False,"Introducción a Linux (FileSystem, carpetas)",True
 ```
 
 ## Documentación (Swagger / OpenAPI)

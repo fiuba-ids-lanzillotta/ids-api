@@ -1,12 +1,20 @@
 import csv
 import io
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from ..constants import (
+    INICIO_CLASES,
+    FIN_CLASES,
+    DIAS_CLASE,
+    TIPO_CLASE_DEFAULT,
+    TITULO_CLASE_DEFAULT,
     ERROR_CODE_CLASE_NOT_FOUND,
     ERROR_CODE_CSV_INVALIDO,
     ERROR_CODE_FECHA_DUPLICADA,
     ERROR_CODE_CRONOGRAMA_NO_VACIO,
+    ERROR_CODE_FECHA_DIA_INVALIDO,
+    ERROR_CODE_FECHA_FUERA_PERIODO,
+    ERROR_CODE_SEMANA_INCORRECTA,
 )
 from ..utils import construir_error_api
 from ..validators.cronograma import validar_body_clase
@@ -17,6 +25,79 @@ FECHA_CSV_FORMATO = '%d/%m/%Y'
 
 # Encabezado del CSV. El import lo detecta y lo saltea si viene.
 CSV_HEADER = ['semana', 'fecha', 'tipo', 'titulo', 'contenidos']
+
+
+# ---------------------------------------------------------------
+# Calendario del cuatrimestre (semanas y días de clase)
+# ---------------------------------------------------------------
+
+def _lunes_de(d: date) -> date:
+    """Retorna el lunes de la semana de la fecha dada."""
+    return d - timedelta(days=d.weekday())
+
+
+def semanas_esperadas() -> list[tuple[int, str]]:
+    """
+    Retorna la lista de (semana, fecha_iso) esperada para todo el período:
+    el lunes y el miércoles de cada semana entre INICIO_CLASES y FIN_CLASES.
+    """
+    inicio = _lunes_de(INICIO_CLASES)
+    fin    = _lunes_de(FIN_CLASES)
+    total  = (fin - inicio).days // 7 + 1
+
+    esperadas = []
+    for w in range(total):
+        lunes = inicio + timedelta(weeks=w)
+        for dia in DIAS_CLASE:
+            esperadas.append((w + 1, (lunes + timedelta(days=dia)).isoformat()))
+
+    return esperadas
+
+
+def _semana_de_fecha(fecha_iso: str) -> int | None:
+    """
+    Retorna el número de semana (1..N) al que pertenece una fecha dentro del
+    período, o None si la fecha está fuera del período o no es un día de clase.
+    """
+    d = date.fromisoformat(fecha_iso)
+
+    if d.weekday() not in DIAS_CLASE:
+        return None
+
+    inicio  = _lunes_de(INICIO_CLASES)
+    fin     = _lunes_de(FIN_CLASES)
+    lunes_d = _lunes_de(d)
+
+    if lunes_d < inicio or lunes_d > fin:
+        return None
+
+    return (lunes_d - inicio).days // 7 + 1
+
+
+def _clase_default(semana: int, fecha_iso: str) -> dict:
+    """Clase autogenerada para una fecha del período que no fue cargada."""
+    return {
+        'id':         None,
+        'semana':     semana,
+        'fecha':      fecha_iso,
+        'tipo':       TIPO_CLASE_DEFAULT,
+        'titulo':     TITULO_CLASE_DEFAULT,
+        'contenidos': [],
+    }
+
+
+def _completar_clases(clases: list[dict]) -> list[dict]:
+    """
+    Completa el cronograma con las clases faltantes del período: por cada fecha
+    esperada (lunes/miércoles) que no esté en `clases`, agrega una clase default.
+    Retorna la lista completa ordenada cronológicamente.
+    """
+    por_fecha = {c['fecha']: c for c in clases}
+
+    return [
+        por_fecha.get(fecha) or _clase_default(semana, fecha)
+        for semana, fecha in semanas_esperadas()
+    ]
 
 
 def construir_clase_dto(clase: dict, contenidos: list[dict]) -> dict:
@@ -44,11 +125,16 @@ def _agrupar_contenidos(contenidos: list[dict]) -> dict[int, list[dict]]:
 
 
 def listar_clases() -> list[dict]:
-    """Retorna todas las clases (lista plana) con sus contenidos."""
-    clases     = db.obtener_todas_las_clases()
-    por_clase  = _agrupar_contenidos(db.obtener_todos_los_contenidos())
+    """
+    Retorna el cronograma completo del período (lista plana).
 
-    return [construir_clase_dto(c, por_clase.get(c['id'], [])) for c in clases]
+    Las fechas lunes/miércoles que no estén cargadas se completan con clases
+    default (no se persisten; solo se devuelven).
+    """
+    por_clase = _agrupar_contenidos(db.obtener_todos_los_contenidos())
+    dtos = [construir_clase_dto(c, por_clase.get(c['id'], [])) for c in db.obtener_todas_las_clases()]
+
+    return _completar_clases(dtos)
 
 
 def buscar_clase_por_id(clase_id: int) -> dict:
@@ -104,7 +190,8 @@ def importar_cronograma_csv(contenido: str, reemplazar: bool) -> list[dict]:
       de lo contrario lanza ValueError 409.
     - reemplazar=True (PUT completo): borra el cronograma existente y carga el nuevo.
 
-    Retorna la lista de clases resultante.
+    Las fechas lunes/miércoles del período que no vengan en el CSV se completan
+    con clases default y se persisten. Retorna el cronograma completo resultante.
     """
     clases = _parsear_csv(contenido)
 
@@ -115,7 +202,7 @@ def importar_cronograma_csv(contenido: str, reemplazar: bool) -> list[dict]:
             description='Ya existe un cronograma cargado. Usá PUT /cronograma/csv para reemplazarlo.'
         ), 409)
 
-    _reemplazar_cronograma(clases)
+    _reemplazar_cronograma(_completar_clases(clases))
 
     return listar_clases()
 
@@ -160,12 +247,12 @@ def exportar_cronograma_csv() -> str:
     exportan SIEMPRE entre comillas dobles, para representarlos como strings de
     forma consistente. Los demás campos (semana, fecha y el hito booleano) van
     sin comillas.
-    """
-    por_clase = _agrupar_contenidos(db.obtener_todos_los_contenidos())
 
+    Las clases faltantes del período se completan con los valores default.
+    """
     lineas = [','.join(CSV_HEADER)]
 
-    for clase in db.obtener_todas_las_clases():
+    for clase in listar_clases():
         campos = [
             str(clase['semana']),
             _fecha_iso_a_csv(clase['fecha']),
@@ -173,7 +260,7 @@ def exportar_cronograma_csv() -> str:
             _entrecomillar(clase['titulo']) if clase['titulo'] else '',
         ]
 
-        for contenido in por_clase.get(clase['id'], []):
+        for contenido in clase['contenidos']:
             campos.append(_entrecomillar(contenido['texto']))
             campos.append('True' if contenido['hito'] else 'False')
 
@@ -283,10 +370,50 @@ def _parsear_fila(campos: list[str]) -> dict:
                 continue
             errores.append(err)
 
+    # Validaciones de dominio: la fecha debe ser un día de clase válido del
+    # período y la semana informada debe coincidir con la calculada.
+    if fecha_iso is not None:
+        errores.extend(_validar_fecha_periodo(fecha_iso, semana))
+
     if errores:
         raise ValueError({'errors': errores})
 
     return datos
+
+
+def _validar_fecha_periodo(fecha_iso: str, semana_raw) -> list[dict]:
+    """Valida que la fecha sea lunes/miércoles, esté en el período y que la semana coincida."""
+    d = date.fromisoformat(fecha_iso)
+
+    if d.weekday() not in DIAS_CLASE:
+        return [construir_error_api(
+            code=ERROR_CODE_FECHA_DIA_INVALIDO,
+            message='Día de clase inválido',
+            description=f"La fecha {fecha_iso} no es lunes ni miércoles"
+        )['errors'][0]]
+
+    semana_calc = _semana_de_fecha(fecha_iso)
+
+    if semana_calc is None:
+        return [construir_error_api(
+            code=ERROR_CODE_FECHA_FUERA_PERIODO,
+            message='Fecha fuera del período',
+            description=f"La fecha {fecha_iso} está fuera del período de clases"
+        )['errors'][0]]
+
+    try:
+        semana_int = int(str(semana_raw))
+    except (ValueError, TypeError):
+        return []  # el error de 'semana' ya lo reporta validar_body_clase
+
+    if semana_int != semana_calc:
+        return [construir_error_api(
+            code=ERROR_CODE_SEMANA_INCORRECTA,
+            message='Semana incorrecta',
+            description=f"La semana {semana_int} no corresponde a la fecha {fecha_iso} (semana esperada: {semana_calc})"
+        )['errors'][0]]
+
+    return []
 
 
 def _parsear_fecha_csv(valor) -> str:

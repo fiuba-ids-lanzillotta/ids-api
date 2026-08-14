@@ -173,6 +173,11 @@ paths:
   /cronograma/clases:
     get:
       summary: Listar todas las clases (lista plana)
+      description: >-
+        Devuelve el cronograma completo del período (16 semanas, lunes y
+        miércoles). Las fechas no cargadas se completan con clases default
+        (tipo Virtual, titulo "A definir"); estas no están persistidas y por eso
+        vienen con `id` nulo.
       tags: [Cronograma]
       responses:
         '200':
@@ -287,6 +292,9 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     get:
       summary: Exportar el cronograma actual como CSV
+      description: >-
+        Exporta el cronograma completo del período. Las fechas no cargadas se
+        completan con clases default (tipo Virtual, titulo "A definir").
       tags: [Cronograma]
       responses:
         '200':
@@ -403,6 +411,8 @@ components:
         id:
           type: integer
           format: int64
+          nullable: true
+          description: Nulo en clases autogeneradas (fechas del período no cargadas).
           example: 1
         semana:
           type: integer
@@ -410,7 +420,7 @@ components:
         fecha:
           type: string
           format: date
-          example: '2026-03-09'
+          example: '2026-08-17'
         tipo:
           type: string
           enum: [Presencial, Virtual, Feriado, 'Sin clases']
@@ -434,8 +444,8 @@ components:
         fecha:
           type: string
           format: date
-          description: Fecha en formato ISO (YYYY-MM-DD)
-          example: '2026-03-09'
+          description: Fecha ISO (YYYY-MM-DD). Debe ser lunes o miércoles dentro del período de clases.
+          example: '2026-08-17'
         tipo:
           type: string
           enum: [Presencial, Virtual, Feriado, 'Sin clases']

@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,6 +15,16 @@ ROLES_DOCENTE = ('Profesor', 'Ayudante', 'Colaborador')
 
 # Tipos de clase válidos para el cronograma
 TIPOS_CLASE = ('Presencial', 'Virtual', 'Feriado', 'Sin clases')
+
+# Período de clases del cuatrimestre. Definen la cantidad de semanas y, por lo
+# tanto, la cantidad de clases (2 por semana: lunes y miércoles).
+INICIO_CLASES = date(2026, 8, 17)   # lunes de la primera semana de clases
+FIN_CLASES    = date(2026, 11, 30)  # lunes de la última semana de clases
+DIAS_CLASE    = (0, 2)              # weekday(): lunes=0, miércoles=2
+
+# Defaults para las clases autogeneradas (fechas del período que no se cargaron)
+TIPO_CLASE_DEFAULT   = 'Virtual'
+TITULO_CLASE_DEFAULT = 'A definir'
 
 # Credenciales del panel de administración (único usuario, vía variables de entorno).
 # ADMIN_PASSWORD es un hash bcrypt del password (no el password en texto plano).
@@ -56,3 +67,6 @@ ERROR_CODE_ARCHIVO_FALTANTE    = 'file.missing'
 ERROR_CODE_CSV_INVALIDO        = 'invalid.csv'
 ERROR_CODE_FECHA_DUPLICADA     = 'fecha.duplicated'
 ERROR_CODE_CRONOGRAMA_NO_VACIO = 'cronograma.not.empty'
+ERROR_CODE_FECHA_DIA_INVALIDO  = 'fecha.invalid.weekday'
+ERROR_CODE_FECHA_FUERA_PERIODO = 'fecha.out.of.period'
+ERROR_CODE_SEMANA_INCORRECTA   = 'semana.mismatch'
