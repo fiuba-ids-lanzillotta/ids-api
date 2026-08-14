@@ -251,12 +251,14 @@ def _parsear_fila(campos: list[str]) -> dict:
     titulo = titulo or None
 
     fecha_iso = None
+
     try:
         fecha_iso = _parsear_fecha_csv(campos[1] if len(campos) > 1 else None)
     except ValueError as e:
         errores.extend(e.args[0]['errors'])
 
     contenidos = []
+
     try:
         contenidos = _parsear_contenidos(campos[4:])
     except ValueError as e:
@@ -271,6 +273,7 @@ def _parsear_fila(campos: list[str]) -> dict:
     }
 
     datos = None
+
     try:
         datos = validar_body_clase(body)
     except ValueError as e:
@@ -316,6 +319,7 @@ def _parsear_contenidos(campos: list[str]) -> list[dict]:
         ))
 
     contenidos = []
+    
     for i in range(0, len(campos), 2):
         texto = campos[i].strip()
         hito  = _parsear_hito(campos[i + 1])
