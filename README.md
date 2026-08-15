@@ -38,7 +38,10 @@ Flujo de una request:
 ids-api/
 ├── app.py                       # Entry point Flask (puerto 5000, CORS, registro de blueprints)
 ├── requirements.txt             # Dependencias Python
-├── .env.example                 # Template de variables de entorno (Supabase + JWT + admin)
+├── requirements-dev.txt         # Dependencias de desarrollo (pytest)
+├── vercel.json                  # Configuración de deploy en Vercel
+├── pytest.ini / conftest.py     # Configuración de los tests
+├── .env.example                 # Template de variables de entorno (Supabase + JWT + admin + CORS)
 ├── setup_virtualenv.bat/.sh     # Scripts de setup con virtualenv
 ├── setup_pipenv.bat/.sh         # Scripts de setup con pipenv
 ├── README.md
@@ -47,8 +50,9 @@ ids-api/
 ├── .gitattributes
 │
 ├── ids_api/
-│   ├── constants.py             # Configuración (Supabase, JWT, admin, roles, tipos, códigos de error)
-│   ├── db.py                    # Capa de acceso a datos (cliente de Supabase + RPC)
+│   ├── constants.py             # Constantes de dominio (roles, tipos, período, códigos de error)
+│   ├── config.py                # Configuración de entorno (Supabase, JWT, admin, CORS)
+│   ├── db.py                    # Capa de acceso a datos (cliente de Supabase)
 │   ├── utils.py                 # Validaciones, bcrypt, JWT, @requiere_auth
 │   ├── routes/                  # Un blueprint por recurso
 │   │   ├── auth.py              #   POST /login, GET /me
@@ -64,9 +68,10 @@ ids-api/
 │       └── cronograma.py
 │
 ├── db/
-│   └── init_db.sql              # Esquema + seed + función RPC (para correr en Supabase)
-└── docs/
-    └── swagger.yaml             # Documentación OpenAPI 3.0 de la API
+│   └── init_db.sql              # Esquema + seed (para correr en Supabase)
+├── docs/
+│   └── swagger.yaml             # Documentación OpenAPI 3.0 de la API
+└── tests/                       # Tests (pytest): utils, validators, servicios y rutas
 ```
 
 ## Configuración
@@ -89,6 +94,8 @@ JWT_EXPIRACION_HORAS=8
 
 ADMIN_USER=admin
 ADMIN_PASSWORD=$2b$12$...   # hash bcrypt del password (no el texto plano)
+
+CORS_ORIGINS=*             # orígenes permitidos (coma-separados); en prod, el dominio del front
 ```
 
 | Variable         | Descripción                                                                 |
@@ -97,9 +104,10 @@ ADMIN_PASSWORD=$2b$12$...   # hash bcrypt del password (no el texto plano)
 | `SUPABASE_KEY`   | **service_role** key (secreta, no se expone al frontend).                   |
 | `SUPABASE_BUCKET_DOCENTES` | Bucket privado para las fotos de docentes (default `docentes-fotos`). |
 | `JWT_SECRET`     | Clave con la que se firman los tokens. Usá una propia y larga fuera de local. |
-| `JWT_EXPIRACION_HORAS` | Horas de validez del token.                                           |
+| `JWT_EXPIRACION_HORAS` | Horas de validez del token (default `8`).                             |
 | `ADMIN_USER`     | Usuario del panel de administración (único usuario).                        |
 | `ADMIN_PASSWORD` | **Hash bcrypt** del password del admin (no el password en texto plano).     |
+| `CORS_ORIGINS`   | Orígenes permitidos para CORS, separados por coma (default `*` = todos).     |
 
 > El `.env` está en `.gitignore` y **no debe subirse al repositorio**.
 
