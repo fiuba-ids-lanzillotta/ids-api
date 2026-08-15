@@ -240,3 +240,12 @@ Ejemplo de fila:
 ## Documentación (Swagger / OpenAPI)
 
 La especificación completa en formato OpenAPI 3.0 vive en [`docs/swagger.yaml`](docs/swagger.yaml). Se puede visualizar pegándola en [editor.swagger.io](https://editor.swagger.io) o con la extensión "Swagger Viewer" en VSCode.
+
+## Tests
+
+Los tests (pytest) cubren funciones puras: validaciones, parser del CSV y la lógica de calendario (semanas del período, autocompletado). No requieren base ni red.
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
