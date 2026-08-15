@@ -11,6 +11,7 @@ from .config import (
     JWT_SECRET,
     JWT_ALGORITHM,
     JWT_EXPIRACION_HORAS,
+    CACHE_SEGUNDOS,
 )
 from .constants import (
     FECHA_ISO_FORMATO,
@@ -43,6 +44,23 @@ def construir_error_api(code: str, message: str, description: str, level: str = 
             'description': description
         }]
     }
+
+
+# ---------------------------------------------------------------
+# Cache HTTP (CDN)
+# ---------------------------------------------------------------
+
+def con_cache(respuesta, segundos: int = CACHE_SEGUNDOS):
+    """
+    Agrega headers de cache a una respuesta GET para que el CDN (Vercel) la sirva
+    desde el edge sin invocar la función. Si segundos <= 0, no cachea.
+    """
+    if segundos > 0:
+        respuesta.headers['Cache-Control'] = (
+            f'public, max-age=60, s-maxage={segundos}, stale-while-revalidate={segundos * 2}'
+        )
+
+    return respuesta
 
 
 # ---------------------------------------------------------------

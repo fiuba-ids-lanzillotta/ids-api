@@ -32,3 +32,7 @@ SUPABASE_BUCKET_DOCENTES = os.getenv('SUPABASE_BUCKET_DOCENTES', 'docentes-fotos
 # Orígenes permitidos para CORS (lista separada por comas). Default '*' (todos);
 # en producción conviene restringirlo al dominio del frontend.
 CORS_ORIGINS = [origen.strip() for origen in os.getenv('CORS_ORIGINS', '*').split(',') if origen.strip()]
+
+# Segundos de cache en el CDN para los GET públicos (Vercel usa s-maxage para
+# servir desde el edge sin invocar la función). 0 desactiva el cache.
+CACHE_SEGUNDOS = int(os.getenv('CACHE_MAX_AGE', '300'))

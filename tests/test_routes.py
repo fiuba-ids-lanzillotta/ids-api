@@ -29,6 +29,7 @@ def test_get_clases(client, monkeypatch):
     assert respuesta.status_code == 200
     assert len(datos) == 32
     assert datos[0]['tipo'] == 'Virtual'
+    assert 's-maxage' in respuesta.headers.get('Cache-Control', '')
 
 
 # --- PUT /cronograma/clases/<id> (auth admin) ---

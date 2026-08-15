@@ -109,6 +109,7 @@ CORS_ORIGINS=*             # orígenes permitidos (coma-separados); en prod, el 
 | `ADMIN_USER`     | Usuario del panel de administración (único usuario).                        |
 | `ADMIN_PASSWORD` | **Hash bcrypt** del password del admin (no el password en texto plano).     |
 | `CORS_ORIGINS`   | Orígenes permitidos para CORS, separados por coma (default `*` = todos).     |
+| `CACHE_MAX_AGE`  | Segundos de cache en el CDN para los GET públicos (default `300`; `0` desactiva). |
 
 > El `.env` está en `.gitignore` y **no debe subirse al repositorio**.
 

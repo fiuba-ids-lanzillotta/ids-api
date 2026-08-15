@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, Response
 
 from ..constants import ROL_ADMIN, ERROR_CODE_ARCHIVO_FALTANTE
-from ..utils import requiere_auth, construir_error_api, validar_entero, validar_minimo
+from ..utils import requiere_auth, construir_error_api, validar_entero, validar_minimo, con_cache
 from ..services.cronograma import (
     listar_clases,
     actualizar_clase,
@@ -23,7 +23,7 @@ def get_clases():
     Siempre devuelve las clases del período (las fechas no cargadas vienen
     autocompletadas con valores default), así que nunca es una lista vacía.
     """
-    return jsonify(listar_clases())
+    return con_cache(jsonify(listar_clases()))
 
 
 @cronograma_bp.route('/cronograma/clases/<clase_id>', methods=['PUT'])
@@ -61,11 +61,11 @@ def get_cronograma_csv():
     """Exporta el cronograma actual como CSV (descarga)."""
     contenido = exportar_cronograma_csv()
 
-    return Response(
+    return con_cache(Response(
         contenido,
         mimetype='text/csv',
         headers={'Content-Disposition': 'attachment; filename="cronograma.csv"'},
-    )
+    ))
 
 
 def _importar_csv(reemplazar: bool, status_ok: int):

@@ -3,6 +3,7 @@ import binascii
 import logging
 import re
 import uuid
+from functools import lru_cache
 
 from ..config import SUPABASE_BUCKET_DOCENTES
 from ..constants import (
@@ -80,22 +81,34 @@ def subir_imagen_base64(data_uri: str) -> str:
     return nombre
 
 
-def obtener_imagen_base64(path: str) -> str | None:
-    """Descarga la imagen del bucket y la retorna como data URI base64, o None si no hay/falla."""
-    if not path:
-        return None
+@lru_cache(maxsize=128)
+def _descargar_como_data_uri(path: str) -> str:
+    """
+    Descarga la imagen del bucket y la devuelve como data URI base64.
 
-    try:
-        contenido = db.cliente.storage.from_(SUPABASE_BUCKET_DOCENTES).download(path)
-    except Exception as error:
-        logger.error(f"Error al descargar imagen '{path}': {error}")
-
-        return None
-
+    Cacheada por `path`: los paths son UUID inmutables (al cambiar la foto de un
+    docente se genera un path nuevo y se borra el viejo), así que el resultado no
+    queda obsoleto. lru_cache no cachea las excepciones, por lo que un fallo de
+    descarga se reintenta en la próxima llamada.
+    """
+    contenido = db.cliente.storage.from_(SUPABASE_BUCKET_DOCENTES).download(path)
     extension = path.rsplit('.', 1)[1].lower() if '.' in path else 'jpeg'
     contenido_base64 = base64.b64encode(contenido).decode('utf-8')
 
     return f'data:image/{extension};base64,{contenido_base64}'
+
+
+def obtener_imagen_base64(path: str) -> str | None:
+    """Descarga (con cache por path) la imagen del bucket como data URI, o None si no hay/falla."""
+    if not path:
+        return None
+
+    try:
+        return _descargar_como_data_uri(path)
+    except Exception as error:
+        logger.error(f"Error al descargar imagen '{path}': {error}")
+
+        return None
 
 
 def borrar_imagen(path: str) -> None:
