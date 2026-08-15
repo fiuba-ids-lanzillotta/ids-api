@@ -23,79 +23,79 @@ def test_get_clases(client, monkeypatch):
     monkeypatch.setattr(db, 'obtener_todas_las_clases', lambda: [])
     monkeypatch.setattr(db, 'obtener_todos_los_contenidos', lambda: [])
 
-    r = client.get('/ids_api/cronograma/clases')
-    data = r.get_json()
+    respuesta = client.get('/ids_api/cronograma/clases')
+    datos = respuesta.get_json()
 
-    assert r.status_code == 200
-    assert len(data) == 32
-    assert data[0]['tipo'] == 'Virtual'
+    assert respuesta.status_code == 200
+    assert len(datos) == 32
+    assert datos[0]['tipo'] == 'Virtual'
 
 
 # --- PUT /cronograma/clases/<id> (auth admin) ---
 
 def test_put_clase_sin_token(client):
-    r = client.put('/ids_api/cronograma/clases/1',
-                   json={'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual'})
+    respuesta = client.put('/ids_api/cronograma/clases/1',
+                           json={'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual'})
 
-    assert r.status_code == 401
+    assert respuesta.status_code == 401
 
 
 def test_put_clase_rol_insuficiente(client):
-    r = client.put('/ids_api/cronograma/clases/1',
-                   json={'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual'},
-                   headers=_auth(rol='otro'))
+    respuesta = client.put('/ids_api/cronograma/clases/1',
+                           json={'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual'},
+                           headers=_auth(rol='otro'))
 
-    assert r.status_code == 403
+    assert respuesta.status_code == 403
 
 
 def test_put_clase_ok(client, monkeypatch):
     clase = {'id': 1, 'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Presencial', 'titulo': 'x'}
-    reg = {}
-    monkeypatch.setattr(db, 'obtener_clase_por_id', lambda cid: dict(clase, id=cid))
-    monkeypatch.setattr(db, 'obtener_contenidos_por_clase', lambda cid: [])
-    monkeypatch.setattr(db, 'obtener_clase_por_fecha', lambda f: {})
-    monkeypatch.setattr(db, 'actualizar_clase', lambda **kw: reg.update(kw) or 1)
-    monkeypatch.setattr(db, 'eliminar_contenidos_de_clase', lambda cid: 0)
-    monkeypatch.setattr(db, 'insertar_contenido', lambda *a: 1)
+    registro = {}
+    monkeypatch.setattr(db, 'obtener_clase_por_id', lambda clase_id: dict(clase, id=clase_id))
+    monkeypatch.setattr(db, 'obtener_contenidos_por_clase', lambda clase_id: [])
+    monkeypatch.setattr(db, 'obtener_clase_por_fecha', lambda fecha: {})
+    monkeypatch.setattr(db, 'actualizar_clase', lambda **kwargs: registro.update(kwargs) or 1)
+    monkeypatch.setattr(db, 'eliminar_contenidos_de_clase', lambda clase_id: 0)
+    monkeypatch.setattr(db, 'insertar_contenido', lambda *args: 1)
 
-    r = client.put('/ids_api/cronograma/clases/1',
-                   json={'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual', 'titulo': 'y', 'contenidos': []},
-                   headers=_auth())
+    respuesta = client.put('/ids_api/cronograma/clases/1',
+                           json={'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual', 'titulo': 'y', 'contenidos': []},
+                           headers=_auth())
 
-    assert r.status_code == 200
-    assert reg['tipo'] == 'Virtual' and reg['semana'] == 1
+    assert respuesta.status_code == 200
+    assert registro['tipo'] == 'Virtual' and registro['semana'] == 1
 
 
 # --- POST /cronograma/csv sin archivo ---
 
 def test_post_csv_sin_archivo(client):
-    r = client.post('/ids_api/cronograma/csv', headers=_auth())
-    
-    assert r.status_code == 400
-    assert r.get_json()['errors'][0]['code'] == 'file.missing'
+    respuesta = client.post('/ids_api/cronograma/csv', headers=_auth())
+
+    assert respuesta.status_code == 400
+    assert respuesta.get_json()['errors'][0]['code'] == 'file.missing'
 
 
 # --- GET /docentes (ordenados por rol) ---
 
 def test_get_docentes_ordenados_por_rol(client, monkeypatch):
-    docs = [
+    lista_docentes = [
         {'id': 1, 'nombre': 'Aye', 'apellido': 'x', 'email': None, 'rol': 'Ayudante', 'foto': None},
         {'id': 2, 'nombre': 'Cola', 'apellido': 'y', 'email': None, 'rol': 'Colaborador', 'foto': None},
         {'id': 3, 'nombre': 'Prof', 'apellido': 'z', 'email': None, 'rol': 'Profesor', 'foto': None},
     ]
-    monkeypatch.setattr(db, 'obtener_todos_los_docentes', lambda: list(docs))
-    monkeypatch.setattr(docentes, 'obtener_imagen_base64', lambda p: None)
+    monkeypatch.setattr(db, 'obtener_todos_los_docentes', lambda: list(lista_docentes))
+    monkeypatch.setattr(docentes, 'obtener_imagen_base64', lambda path: None)
 
-    r = client.get('/ids_api/docentes')
+    respuesta = client.get('/ids_api/docentes')
 
-    assert r.status_code == 200
-    assert [d['rol'] for d in r.get_json()] == ['Profesor', 'Ayudante', 'Colaborador']
+    assert respuesta.status_code == 200
+    assert [docente['rol'] for docente in respuesta.get_json()] == ['Profesor', 'Ayudante', 'Colaborador']
 
 
 def test_get_docentes_vacio_404(client, monkeypatch):
     monkeypatch.setattr(db, 'obtener_todos_los_docentes', lambda: [])
 
-    r = client.get('/ids_api/docentes')
+    respuesta = client.get('/ids_api/docentes')
 
-    assert r.status_code == 404
-    assert r.get_json()['errors'][0]['code'] == 'docente.not.found'
+    assert respuesta.status_code == 404
+    assert respuesta.get_json()['errors'][0]['code'] == 'docente.not.found'

@@ -5,17 +5,17 @@ from ids_api import utils
 from ids_api.services import auth
 
 
-def _codigos(exc_info):
-    return [e['code'] for e in exc_info.value.args[0]['errors']]
+def _codigos(excepcion):
+    return [error['code'] for error in excepcion.value.args[0]['errors']]
 
 
 # --- password ---
 
 def test_verificar_password():
-    hash_ = bcrypt.hashpw(b'secreto', bcrypt.gensalt()).decode('utf-8')
+    hash_password = bcrypt.hashpw(b'secreto', bcrypt.gensalt()).decode('utf-8')
 
-    assert utils.verificar_password('secreto', hash_) is True
-    assert utils.verificar_password('otro', hash_) is False
+    assert utils.verificar_password('secreto', hash_password) is True
+    assert utils.verificar_password('otro', hash_password) is False
 
 
 def test_verificar_password_hash_invalido():
@@ -33,36 +33,36 @@ def test_jwt_roundtrip():
 
 
 def test_jwt_invalido():
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         utils.decodificar_token('esto.no.es.un.jwt')
 
-    assert _codigos(exc) == ['auth.token.invalid']
+    assert _codigos(excepcion) == ['auth.token.invalid']
 
 
 def test_jwt_expirado(monkeypatch):
     monkeypatch.setattr(utils, 'JWT_EXP_HORAS', -1)  # emite un token ya vencido
     token = utils.generar_token(subject='admin', rol='admin')
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         utils.decodificar_token(token)
 
-    assert _codigos(exc) == ['auth.token.expired']
+    assert _codigos(excepcion) == ['auth.token.expired']
 
 
 # --- autenticar_admin ---
 
 def _config_admin(monkeypatch, password='secreto'):
-    hash_ = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode('utf-8')
+    hash_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode('utf-8')
     monkeypatch.setattr(auth, 'ADMIN_USER', 'admin')
-    monkeypatch.setattr(auth, 'ADMIN_PASSWORD', hash_)
+    monkeypatch.setattr(auth, 'ADMIN_PASSWORD', hash_password)
 
 
 def test_autenticar_admin_ok(monkeypatch):
     _config_admin(monkeypatch)
-    res = auth.autenticar_admin({'usuario': 'admin', 'password': 'secreto'})
+    resultado = auth.autenticar_admin({'usuario': 'admin', 'password': 'secreto'})
 
-    assert res['usuario'] == {'usuario': 'admin', 'rol': 'admin'}
-    assert utils.decodificar_token(res['token'])['rol'] == 'admin'
+    assert resultado['usuario'] == {'usuario': 'admin', 'rol': 'admin'}
+    assert utils.decodificar_token(resultado['token'])['rol'] == 'admin'
 
 
 @pytest.mark.parametrize('body', [
@@ -71,8 +71,8 @@ def test_autenticar_admin_ok(monkeypatch):
 ])
 def test_autenticar_admin_invalido(monkeypatch, body):
     _config_admin(monkeypatch)
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         auth.autenticar_admin(body)
-        
-    assert _codigos(exc) == ['invalid.credentials']
-    assert exc.value.args[1] == 401
+
+    assert _codigos(excepcion) == ['invalid.credentials']
+    assert excepcion.value.args[1] == 401

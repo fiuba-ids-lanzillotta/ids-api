@@ -8,8 +8,8 @@ from ids_api.services import storage
 PIXEL = 'data:image/png;base64,' + base64.b64encode(b'x').decode('ascii')
 
 
-def _codigos(exc_info):
-    return [e['code'] for e in exc_info.value.args[0]['errors']]
+def _codigos(excepcion):
+    return [error['code'] for error in excepcion.value.args[0]['errors']]
 
 
 @pytest.mark.parametrize('data_uri', [
@@ -18,19 +18,19 @@ def _codigos(exc_info):
     'data:image/tiff;base64,' + base64.b64encode(b'x').decode('ascii'),  # extensión no permitida
 ])
 def test_subir_imagen_rechaza_invalidas(data_uri):
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         storage.subir_imagen_base64(data_uri)
 
-    assert _codigos(exc) == ['invalid.imagen']
+    assert _codigos(excepcion) == ['invalid.imagen']
 
 
 def test_subir_imagen_rechaza_grande(monkeypatch):
     monkeypatch.setattr(storage, 'MAX_IMAGEN_MB', 0)  # cualquier contenido supera el límite
-    
-    with pytest.raises(ValueError) as exc:
+
+    with pytest.raises(ValueError) as excepcion:
         storage.subir_imagen_base64(PIXEL)
 
-    assert _codigos(exc) == ['invalid.imagen']
+    assert _codigos(excepcion) == ['invalid.imagen']
 
 
 def test_obtener_imagen_sin_path():

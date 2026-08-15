@@ -11,9 +11,9 @@ from ids_api.utils import (
 )
 
 
-def _codigos(exc_info):
+def _codigos(excepcion):
     """Extrae los codes del payload de error de un ValueError de la API."""
-    return [e['code'] for e in exc_info.value.args[0]['errors']]
+    return [error['code'] for error in excepcion.value.args[0]['errors']]
 
 
 # --- validar_entero ---
@@ -25,36 +25,38 @@ def test_validar_entero_ok():
 
 @pytest.mark.parametrize('valor', ['abc', '3.5', None, ''])
 def test_validar_entero_invalido(valor):
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         validar_entero(valor, 'id')
 
-    assert _codigos(exc) == ['invalid.id.format']
+    assert _codigos(excepcion) == ['invalid.id.format']
 
 
 # --- min / max ---
 
 def test_validar_minimo():
     assert validar_minimo(5, 1, 'n') == 5
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         validar_minimo(0, 1, 'n')
-        
-    assert _codigos(exc) == ['invalid.min.value']
+
+    assert _codigos(excepcion) == ['invalid.min.value']
 
 
 def test_validar_maximo():
     assert validar_maximo(5, 10, 'n') == 5
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         validar_maximo(11, 10, 'n')
-    assert _codigos(exc) == ['invalid.max.value']
+
+    assert _codigos(excepcion) == ['invalid.max.value']
 
 
 # --- strings ---
 
 def test_validar_string_no_vacio():
     assert validar_string_no_vacio('  hola  ', 'x') == 'hola'
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         validar_string_no_vacio('   ', 'x')
-    assert _codigos(exc) == ['required.x']
+
+    assert _codigos(excepcion) == ['required.x']
 
 
 def test_validar_largo_string():
@@ -73,10 +75,10 @@ def test_validar_formato_email_ok():
 
 @pytest.mark.parametrize('email', ['sin-arroba', 'a@b', 'a b@c.com'])
 def test_validar_formato_email_invalido(email):
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excepcion:
         validar_formato_email(email)
-        
-    assert _codigos(exc) == ['invalid.email.format']
+
+    assert _codigos(excepcion) == ['invalid.email.format']
 
 
 # --- fecha ---
