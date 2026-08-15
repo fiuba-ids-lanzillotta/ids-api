@@ -16,9 +16,9 @@ ADMIN_USER     = os.getenv('ADMIN_USER', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
 
 # Configuración JWT
-JWT_SECRET    = os.getenv('JWT_SECRET', 'change-me-please')
-JWT_ALGORITHM = 'HS256'
-JWT_EXP_HORAS = int(os.getenv('JWT_EXP_HORAS', '8'))
+JWT_SECRET           = os.getenv('JWT_SECRET', 'change-me-please')
+JWT_ALGORITHM        = 'HS256'
+JWT_EXPIRACION_HORAS = int(os.getenv('JWT_EXPIRACION_HORAS', '8'))
 
 # Configuración de Supabase. El backend usa la key service_role (no se expone
 # al frontend). En local, ambos valores los imprime `supabase start`.

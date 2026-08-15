@@ -85,7 +85,7 @@ SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_KEY=tu-service-role-key
 
 JWT_SECRET=change-me-please
-JWT_EXP_HORAS=8
+JWT_EXPIRACION_HORAS=8
 
 ADMIN_USER=admin
 ADMIN_PASSWORD=$2b$12$...   # hash bcrypt del password (no el texto plano)
@@ -97,7 +97,7 @@ ADMIN_PASSWORD=$2b$12$...   # hash bcrypt del password (no el texto plano)
 | `SUPABASE_KEY`   | **service_role** key (secreta, no se expone al frontend).                   |
 | `SUPABASE_BUCKET_DOCENTES` | Bucket privado para las fotos de docentes (default `docentes-fotos`). |
 | `JWT_SECRET`     | Clave con la que se firman los tokens. Usá una propia y larga fuera de local. |
-| `JWT_EXP_HORAS`  | Horas de validez del token.                                                 |
+| `JWT_EXPIRACION_HORAS` | Horas de validez del token.                                           |
 | `ADMIN_USER`     | Usuario del panel de administración (único usuario).                        |
 | `ADMIN_PASSWORD` | **Hash bcrypt** del password del admin (no el password en texto plano).     |
 

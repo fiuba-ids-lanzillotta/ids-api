@@ -10,7 +10,7 @@ from flask import request, jsonify
 from .config import (
     JWT_SECRET,
     JWT_ALGORITHM,
-    JWT_EXP_HORAS,
+    JWT_EXPIRACION_HORAS,
 )
 from .constants import (
     FECHA_ISO_FORMATO,
@@ -167,7 +167,7 @@ def generar_token(subject: str, rol: str) -> str:
         'sub': str(subject),
         'rol': rol,
         'iat': ahora,
-        'exp': ahora + timedelta(hours=JWT_EXP_HORAS),
+        'exp': ahora + timedelta(hours=JWT_EXPIRACION_HORAS),
     }
 
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)

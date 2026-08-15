@@ -40,7 +40,7 @@ def test_jwt_invalido():
 
 
 def test_jwt_expirado(monkeypatch):
-    monkeypatch.setattr(utils, 'JWT_EXP_HORAS', -1)  # emite un token ya vencido
+    monkeypatch.setattr(utils, 'JWT_EXPIRACION_HORAS', -1)  # emite un token ya vencido
     token = utils.generar_token(subject='admin', rol='admin')
 
     with pytest.raises(ValueError) as excepcion:

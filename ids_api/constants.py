@@ -27,7 +27,7 @@ FECHA_ISO_FORMATO = '%Y-%m-%d'
 
 # Restricciones de las fotos de docentes (la config del bucket vive en config.py)
 EXTENSIONES_IMAGEN = ('png', 'jpg', 'jpeg', 'gif', 'webp')
-MAX_IMAGEN_MB = 5
+MAXIMO_IMAGEN_MB = 5
 
 # Códigos de error
 ERROR_CODE_INVALID_BODY        = 'invalid.body'

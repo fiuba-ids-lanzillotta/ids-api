@@ -7,7 +7,7 @@ import uuid
 from ..config import SUPABASE_BUCKET_DOCENTES
 from ..constants import (
     EXTENSIONES_IMAGEN,
-    MAX_IMAGEN_MB,
+    MAXIMO_IMAGEN_MB,
     ERROR_CODE_INVALID_IMAGEN,
     ERROR_CODE_IMAGEN_UPLOAD,
 )
@@ -53,11 +53,11 @@ def subir_imagen_base64(data_uri: str) -> str:
             description='El contenido base64 de la foto no es válido'
         ))
 
-    if len(contenido) > MAX_IMAGEN_MB * 1024 * 1024:
+    if len(contenido) > MAXIMO_IMAGEN_MB * 1024 * 1024:
         raise ValueError(construir_error_api(
             code=ERROR_CODE_INVALID_IMAGEN,
             message='Imagen demasiado grande',
-            description=f'La foto no puede superar los {MAX_IMAGEN_MB} MB'
+            description=f'La foto no puede superar los {MAXIMO_IMAGEN_MB} MB'
         ))
 
     nombre = f'{uuid.uuid4().hex}.{extension}'
