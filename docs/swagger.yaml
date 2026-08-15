@@ -192,8 +192,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Clase'
-        '204':
-          $ref: '#/components/responses/NoContent'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /cronograma/clases/{id}:

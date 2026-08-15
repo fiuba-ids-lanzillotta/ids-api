@@ -10,6 +10,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from ids_api.constants import BASE_URL
+from ids_api.config import CORS_ORIGINS
 from ids_api.routes.auth import auth_bp
 from ids_api.routes.docentes import docentes_bp
 from ids_api.routes.cronograma import cronograma_bp
@@ -19,8 +20,9 @@ logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(name)s - %(me
 app = Flask(__name__)
 app.json.sort_keys = False
 
-# Habilitar CORS para que el frontend (ids-web) pueda consumir la API
-CORS(app)
+# Habilitar CORS para que el frontend (ids-web) pueda consumir la API.
+# Los orígenes permitidos se configuran con CORS_ORIGINS (default: todos).
+CORS(app, origins=CORS_ORIGINS)
 
 app.register_blueprint(auth_bp, url_prefix=BASE_URL)
 app.register_blueprint(docentes_bp, url_prefix=BASE_URL)

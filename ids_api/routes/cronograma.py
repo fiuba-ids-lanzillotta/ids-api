@@ -17,13 +17,13 @@ CAMPO_ARCHIVO_CSV = 'archivo'
 
 @cronograma_bp.route('/cronograma/clases', methods=['GET'])
 def get_clases():
-    """Retorna todas las clases con sus contenidos (público)."""
-    clases = listar_clases()
+    """
+    Retorna el cronograma completo con sus contenidos (público).
 
-    if not clases:
-        return '', 204
-
-    return jsonify(clases)
+    Siempre devuelve las clases del período (las fechas no cargadas vienen
+    autocompletadas con valores default), así que nunca es una lista vacía.
+    """
+    return jsonify(listar_clases())
 
 
 @cronograma_bp.route('/cronograma/clases/<clase_id>', methods=['PUT'])
