@@ -504,7 +504,7 @@ def _parsear_hito(valor) -> bool:
 
     if v in ('true', '1', 'si', 'sí'):
         return True
-    if v in ('false', '0', ''):
+    if v in ('false', '0', 'no', ''):
         return False
 
     raise ValueError(construir_error_api(

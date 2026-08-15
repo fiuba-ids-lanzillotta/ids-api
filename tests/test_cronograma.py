@@ -5,6 +5,7 @@ from ids_api.services.cronograma import (
     _semana_de_fecha,
     _completar_clases,
     _parsear_csv,
+    _parsear_contenidos,
     _parsear_hito,
     _fecha_iso_a_csv,
 )
@@ -83,11 +84,38 @@ def test_parsear_csv_fecha_duplicada():
     assert 'fecha.duplicated' in _codigos(exc)
 
 
+def test_parsear_csv_saltea_header():
+    csv = 'semana,fecha,tipo,titulo,contenidos\n1,17/08/2026,Virtual,X\n'
+    clases = _parsear_csv(csv)
+    assert len(clases) == 1 and clases[0]['fecha'] == '2026-08-17'
+
+
+def test_parsear_csv_vacio():
+    with pytest.raises(ValueError) as exc:
+        _parsear_csv('')
+    assert 'invalid.csv' in _codigos(exc)
+
+
+# --- contenidos ---
+
+def test_parsear_contenidos_pares():
+    assert _parsear_contenidos(['Tema A', 'False', 'Tema B', 'True']) == [
+        {'texto': 'Tema A', 'hito': False},
+        {'texto': 'Tema B', 'hito': True},
+    ]
+
+
+def test_parsear_contenidos_impares_falla():
+    with pytest.raises(ValueError) as exc:
+        _parsear_contenidos(['Tema A', 'False', 'Tema B'])
+    assert 'invalid.csv' in _codigos(exc)
+
+
 # --- helpers de CSV ---
 
 @pytest.mark.parametrize('valor,esperado', [
-    ('True', True), ('true', True), ('1', True), ('si', True),
-    ('False', False), ('0', False), ('', False),
+    ('True', True), ('true', True), ('1', True), ('si', True), ('sí', True),
+    ('False', False), ('0', False), ('no', False), ('', False),
 ])
 def test_parsear_hito(valor, esperado):
     assert _parsear_hito(valor) is esperado
