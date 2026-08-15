@@ -87,3 +87,12 @@ def test_get_docentes_ordenados_por_rol(client, monkeypatch):
 
     assert r.status_code == 200
     assert [d['rol'] for d in r.get_json()] == ['Profesor', 'Ayudante', 'Colaborador']
+
+
+def test_get_docentes_vacio_404(client, monkeypatch):
+    monkeypatch.setattr(db, 'obtener_todos_los_docentes', lambda: [])
+
+    r = client.get('/ids_api/docentes')
+
+    assert r.status_code == 404
+    assert r.get_json()['errors'][0]['code'] == 'docente.not.found'

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
-from ..constants import ROL_ADMIN
-from ..utils import requiere_auth, validar_entero, validar_minimo
+from ..constants import ROL_ADMIN, ERROR_CODE_DOCENTE_NOT_FOUND
+from ..utils import requiere_auth, construir_error_api, validar_entero, validar_minimo
 from ..services.docentes import (
     listar_docentes,
     buscar_docente_por_id,
@@ -15,11 +15,15 @@ docentes_bp = Blueprint('docentes', __name__)
 
 @docentes_bp.route('/docentes', methods=['GET'])
 def get_docentes():
-    """Lista todos los docentes (público)."""
+    """Lista todos los docentes (público). Devuelve 404 si no hay ninguno."""
     docentes = listar_docentes()
 
     if not docentes:
-        return '', 204
+        return jsonify(construir_error_api(
+            code=ERROR_CODE_DOCENTE_NOT_FOUND,
+            message='No hay docentes',
+            description='No hay docentes cargados'
+        )), 404
 
     return jsonify(docentes)
 

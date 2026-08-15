@@ -75,8 +75,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Docente'
-        '204':
-          $ref: '#/components/responses/NoContent'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
