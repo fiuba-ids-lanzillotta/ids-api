@@ -20,6 +20,7 @@ def test_login_ok():
 def test_login_acumula_errores():
     with pytest.raises(ValueError) as exc:
         validar_body_login({})
+
     assert set(_codigos(exc)) == {'required.usuario', 'required.password'}
 
 
@@ -27,6 +28,7 @@ def test_login_acumula_errores():
 
 def test_docente_ok():
     datos = validar_body_docente({'nombre': 'Ana', 'apellido': 'Pérez', 'rol': 'Profesor'})
+
     assert datos['nombre'] == 'Ana'
     assert datos['rol'] == 'Profesor'
     assert datos['email'] is None and datos['foto'] is None
@@ -35,12 +37,14 @@ def test_docente_ok():
 def test_docente_rol_invalido():
     with pytest.raises(ValueError) as exc:
         validar_body_docente({'nombre': 'Ana', 'apellido': 'P', 'rol': 'Jefe'})
+
     assert 'invalid.rol.docente' in _codigos(exc)
 
 
 def test_docente_email_invalido():
     with pytest.raises(ValueError) as exc:
         validar_body_docente({'nombre': 'Ana', 'apellido': 'P', 'rol': 'Profesor', 'email': 'mal'})
+
     assert 'invalid.email.format' in _codigos(exc)
 
 
@@ -51,6 +55,7 @@ def test_clase_ok():
         'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual',
         'titulo': 'Intro', 'contenidos': ['a', {'texto': 'b', 'hito': True}],
     })
+
     assert datos['semana'] == 1
     assert datos['contenidos'] == [
         {'texto': 'a', 'hito': False}, {'texto': 'b', 'hito': True},
@@ -60,6 +65,7 @@ def test_clase_ok():
 def test_clase_tipo_invalido():
     with pytest.raises(ValueError) as exc:
         validar_body_clase({'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Zoom'})
+        
     assert 'invalid.tipo.clase' in _codigos(exc)
 
 

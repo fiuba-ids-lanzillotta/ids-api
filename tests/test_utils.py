@@ -27,6 +27,7 @@ def test_validar_entero_ok():
 def test_validar_entero_invalido(valor):
     with pytest.raises(ValueError) as exc:
         validar_entero(valor, 'id')
+
     assert _codigos(exc) == ['invalid.id.format']
 
 
@@ -36,6 +37,7 @@ def test_validar_minimo():
     assert validar_minimo(5, 1, 'n') == 5
     with pytest.raises(ValueError) as exc:
         validar_minimo(0, 1, 'n')
+        
     assert _codigos(exc) == ['invalid.min.value']
 
 
@@ -73,6 +75,7 @@ def test_validar_formato_email_ok():
 def test_validar_formato_email_invalido(email):
     with pytest.raises(ValueError) as exc:
         validar_formato_email(email)
+        
     assert _codigos(exc) == ['invalid.email.format']
 
 

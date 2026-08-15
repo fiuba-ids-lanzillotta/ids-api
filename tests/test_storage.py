@@ -20,13 +20,16 @@ def _codigos(exc_info):
 def test_subir_imagen_rechaza_invalidas(data_uri):
     with pytest.raises(ValueError) as exc:
         storage.subir_imagen_base64(data_uri)
+
     assert _codigos(exc) == ['invalid.imagen']
 
 
 def test_subir_imagen_rechaza_grande(monkeypatch):
     monkeypatch.setattr(storage, 'MAX_IMAGEN_MB', 0)  # cualquier contenido supera el límite
+    
     with pytest.raises(ValueError) as exc:
         storage.subir_imagen_base64(PIXEL)
+
     assert _codigos(exc) == ['invalid.imagen']
 
 
