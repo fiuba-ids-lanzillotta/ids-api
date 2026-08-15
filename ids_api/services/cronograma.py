@@ -155,11 +155,12 @@ def actualizar_clase(clase_id: int, body: dict) -> dict:
     """Valida el body y actualiza la clase junto a sus contenidos. Lanza ValueError 404 si no existe."""
     buscar_clase_por_id(clase_id)
 
-    datos = validar_body_clase(body)
+    datos  = validar_body_clase(body)
+    semana = _validar_fecha_de_clase(datos['fecha'], clase_id)
 
     db.actualizar_clase(
         clase_id=clase_id,
-        semana=datos['semana'],
+        semana=semana,
         fecha=datos['fecha'],
         tipo=datos['tipo'],
         titulo=datos['titulo'],
@@ -168,6 +169,45 @@ def actualizar_clase(clase_id: int, body: dict) -> dict:
     _reemplazar_contenidos(clase_id, datos['contenidos'])
 
     return buscar_clase_por_id(clase_id)
+
+
+def _validar_fecha_de_clase(fecha_iso: str, clase_id: int) -> int:
+    """
+    Valida la fecha para el alta/edición de una clase individual y devuelve el
+    número de semana que le corresponde.
+
+    - Debe ser lunes o miércoles.
+    - Debe caer dentro del período de clases.
+    - No puede coincidir con la fecha de otra clase (la fecha es única).
+
+    La semana se deriva de la fecha (no se confía en la que venga en el body).
+    """
+    if date.fromisoformat(fecha_iso).weekday() not in DIAS_CLASE:
+        raise ValueError(construir_error_api(
+            code=ERROR_CODE_FECHA_DIA_INVALIDO,
+            message='Día de clase inválido',
+            description=f"La fecha {fecha_iso} no es lunes ni miércoles"
+        ))
+
+    semana = _semana_de_fecha(fecha_iso)
+
+    if semana is None:
+        raise ValueError(construir_error_api(
+            code=ERROR_CODE_FECHA_FUERA_PERIODO,
+            message='Fecha fuera del período',
+            description=f"La fecha {fecha_iso} está fuera del período de clases"
+        ))
+
+    otra = db.obtener_clase_por_fecha(fecha_iso)
+
+    if otra and otra['id'] != clase_id:
+        raise ValueError(construir_error_api(
+            code=ERROR_CODE_FECHA_DUPLICADA,
+            message='Fecha duplicada',
+            description=f"Ya existe otra clase con la fecha {fecha_iso}"
+        ), 409)
+
+    return semana
 
 
 def _reemplazar_contenidos(clase_id: int, contenidos: list[dict]) -> None:

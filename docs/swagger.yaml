@@ -103,6 +103,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /docentes/{id}:
@@ -150,6 +152,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -197,6 +201,10 @@ paths:
       - $ref: '#/components/parameters/IdPath'
     put:
       summary: Actualizar una clase (solo admin)
+      description: >-
+        La fecha debe ser lunes o miércoles y estar dentro del período de clases;
+        la semana se deriva de la fecha. La fecha no puede coincidir con la de
+        otra clase (409).
       tags: [Cronograma]
       security:
         - BearerAuth: []
@@ -221,6 +229,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /cronograma/csv:

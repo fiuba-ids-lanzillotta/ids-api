@@ -1,4 +1,4 @@
-from ..constants import ERROR_CODE_DOCENTE_NOT_FOUND, ROLES_DOCENTE
+from ..constants import ERROR_CODE_DOCENTE_NOT_FOUND, ERROR_CODE_EMAIL_DUPLICADO, ROLES_DOCENTE
 from ..utils import construir_error_api
 from ..validators.docentes import validar_body_docente
 from .storage import subir_imagen_base64, obtener_imagen_base64, borrar_imagen
@@ -38,6 +38,7 @@ def buscar_docente_por_id(docente_id: int) -> dict:
 def crear_docente(body: dict) -> dict:
     """Valida el body, sube la foto (si viene) e inserta un docente."""
     datos = validar_body_docente(body)
+    _validar_email_unico(datos['email'])
 
     foto_path = subir_imagen_base64(datos['foto']) if datos['foto'] else None
 
@@ -57,6 +58,7 @@ def actualizar_docente(docente_id: int, body: dict) -> dict:
     """
     actual = _obtener_docente_o_404(docente_id)
     datos  = validar_body_docente(body)
+    _validar_email_unico(datos['email'], excluir_id=docente_id)
 
     foto_path = actual['foto']
 
@@ -79,6 +81,26 @@ def eliminar_docente_por_id(docente_id: int) -> None:
 
     db.eliminar_docente(docente_id)
     borrar_imagen(docente['foto'])
+
+
+def _validar_email_unico(email: str | None, excluir_id: int | None = None) -> None:
+    """
+    Verifica que el email no esté usado por otro docente (la columna es única).
+
+    No hace nada si el email es None. `excluir_id` permite ignorar al propio
+    docente en una actualización. Lanza ValueError 409 si ya está en uso.
+    """
+    if not email:
+        return
+
+    otro = db.obtener_docente_por_email(email)
+
+    if otro and otro['id'] != excluir_id:
+        raise ValueError(construir_error_api(
+            code=ERROR_CODE_EMAIL_DUPLICADO,
+            message='Email en uso',
+            description=f"Ya existe un docente con el email '{email}'"
+        ), 409)
 
 
 def _obtener_docente_o_404(docente_id: int) -> dict:

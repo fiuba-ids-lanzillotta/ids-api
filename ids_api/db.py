@@ -25,6 +25,13 @@ def obtener_docente_por_id(docente_id: int) -> dict:
     return filas[0] if filas else {}
 
 
+def obtener_docente_por_email(email: str) -> dict:
+    """Retorna el docente con el email dado, o un dict vacío si no existe."""
+    filas = cliente.table('docentes').select(CAMPOS_DOCENTE).eq('email', email).execute().data
+
+    return filas[0] if filas else {}
+
+
 def insertar_docente(nombre: str, apellido: str, email: str, rol: str, foto: str) -> int:
     """Inserta un nuevo docente y retorna el id generado."""
     filas = cliente.table('docentes').insert({
@@ -74,6 +81,13 @@ def obtener_todas_las_clases() -> list[dict]:
 def obtener_clase_por_id(clase_id: int) -> dict:
     """Retorna la clase con el id dado, o un dict vacío si no existe."""
     filas = cliente.table('clases').select(CAMPOS_CLASE).eq('id', clase_id).execute().data
+
+    return filas[0] if filas else {}
+
+
+def obtener_clase_por_fecha(fecha: str) -> dict:
+    """Retorna la clase con la fecha dada, o un dict vacío si no existe."""
+    filas = cliente.table('clases').select(CAMPOS_CLASE).eq('fecha', fecha).execute().data
 
     return filas[0] if filas else {}
 
