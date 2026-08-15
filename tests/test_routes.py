@@ -100,3 +100,25 @@ def test_get_docentes_vacio_404(client, monkeypatch):
 
     assert respuesta.status_code == 404
     assert respuesta.get_json()['errors'][0]['code'] == 'docente.not.found'
+
+
+# --- API key (restringe el consumo al frontend) ---
+
+def test_api_key_faltante_401(client, monkeypatch):
+    monkeypatch.setattr(app_module, 'API_KEY', 'secreto')
+
+    respuesta = client.get('/ids_api/cronograma/clases')
+
+    assert respuesta.status_code == 401
+    assert respuesta.get_json()['errors'][0]['code'] == 'api.key.invalid'
+
+
+def test_api_key_valida_pasa(client, monkeypatch):
+    monkeypatch.setattr(app_module, 'API_KEY', 'secreto')
+    monkeypatch.setattr(db, 'obtener_todas_las_clases', lambda: [])
+    monkeypatch.setattr(db, 'obtener_todos_los_contenidos', lambda: [])
+
+    respuesta = client.get('/ids_api/cronograma/clases', headers={'X-API-Key': 'secreto'})
+
+    assert respuesta.status_code == 200
+    assert len(respuesta.get_json()) == 32
