@@ -13,6 +13,7 @@ def _codigos(exc_info):
 
 def test_verificar_password():
     hash_ = bcrypt.hashpw(b'secreto', bcrypt.gensalt()).decode('utf-8')
+
     assert utils.verificar_password('secreto', hash_) is True
     assert utils.verificar_password('otro', hash_) is False
 
@@ -26,6 +27,7 @@ def test_verificar_password_hash_invalido():
 def test_jwt_roundtrip():
     token = utils.generar_token(subject='admin', rol='admin')
     payload = utils.decodificar_token(token)
+
     assert payload['sub'] == 'admin'
     assert payload['rol'] == 'admin'
 
@@ -33,14 +35,17 @@ def test_jwt_roundtrip():
 def test_jwt_invalido():
     with pytest.raises(ValueError) as exc:
         utils.decodificar_token('esto.no.es.un.jwt')
+
     assert _codigos(exc) == ['auth.token.invalid']
 
 
 def test_jwt_expirado(monkeypatch):
     monkeypatch.setattr(utils, 'JWT_EXP_HORAS', -1)  # emite un token ya vencido
     token = utils.generar_token(subject='admin', rol='admin')
+
     with pytest.raises(ValueError) as exc:
         utils.decodificar_token(token)
+
     assert _codigos(exc) == ['auth.token.expired']
 
 
@@ -55,6 +60,7 @@ def _config_admin(monkeypatch, password='secreto'):
 def test_autenticar_admin_ok(monkeypatch):
     _config_admin(monkeypatch)
     res = auth.autenticar_admin({'usuario': 'admin', 'password': 'secreto'})
+
     assert res['usuario'] == {'usuario': 'admin', 'rol': 'admin'}
     assert utils.decodificar_token(res['token'])['rol'] == 'admin'
 
@@ -67,5 +73,6 @@ def test_autenticar_admin_invalido(monkeypatch, body):
     _config_admin(monkeypatch)
     with pytest.raises(ValueError) as exc:
         auth.autenticar_admin(body)
+        
     assert _codigos(exc) == ['invalid.credentials']
     assert exc.value.args[1] == 401

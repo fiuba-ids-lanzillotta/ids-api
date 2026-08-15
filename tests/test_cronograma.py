@@ -19,6 +19,7 @@ def _codigos(exc_info):
 
 def test_semanas_esperadas():
     esp = semanas_esperadas()
+
     assert len(esp) == 32                 # 16 semanas x 2 (lunes y miércoles)
     assert esp[0] == (1, '2026-08-17')
     assert esp[1] == (1, '2026-08-19')
@@ -42,6 +43,7 @@ def test_semana_de_fecha(fecha, esperado):
 
 def test_completar_desde_vacio():
     clases = _completar_clases([])
+
     assert len(clases) == 32
     assert all(c['tipo'] == 'Virtual' and c['titulo'] == 'A definir' for c in clases)
     assert all(c['id'] is None for c in clases)
@@ -51,6 +53,7 @@ def test_completar_preserva_cargadas():
     cargada = {'id': 7, 'semana': 1, 'fecha': '2026-08-17',
                'tipo': 'Presencial', 'titulo': 'Intro', 'contenidos': []}
     clases = _completar_clases([cargada])
+
     assert len(clases) == 32
     assert clases[0] == cargada                      # la cargada se mantiene
     assert clases[1]['titulo'] == 'A definir'        # el resto, default
@@ -61,6 +64,7 @@ def test_completar_preserva_cargadas():
 def test_parsear_csv_ok():
     csv = '1,17/08/2026,Presencial,Intro,"Tema",False\n'
     clases = _parsear_csv(csv)
+
     assert len(clases) == 1
     assert clases[0]['fecha'] == '2026-08-17'
     assert clases[0]['contenidos'] == [{'texto': 'Tema', 'hito': False}]
@@ -74,6 +78,7 @@ def test_parsear_csv_ok():
 def test_parsear_csv_valida_fecha(csv, code):
     with pytest.raises(ValueError) as exc:
         _parsear_csv(csv)
+
     assert code in _codigos(exc)
 
 
@@ -81,18 +86,21 @@ def test_parsear_csv_fecha_duplicada():
     csv = '1,17/08/2026,Virtual,A\n1,17/08/2026,Virtual,B\n'
     with pytest.raises(ValueError) as exc:
         _parsear_csv(csv)
+
     assert 'fecha.duplicated' in _codigos(exc)
 
 
 def test_parsear_csv_saltea_header():
     csv = 'semana,fecha,tipo,titulo,contenidos\n1,17/08/2026,Virtual,X\n'
     clases = _parsear_csv(csv)
+
     assert len(clases) == 1 and clases[0]['fecha'] == '2026-08-17'
 
 
 def test_parsear_csv_vacio():
     with pytest.raises(ValueError) as exc:
         _parsear_csv('')
+
     assert 'invalid.csv' in _codigos(exc)
 
 
@@ -108,6 +116,7 @@ def test_parsear_contenidos_pares():
 def test_parsear_contenidos_impares_falla():
     with pytest.raises(ValueError) as exc:
         _parsear_contenidos(['Tema A', 'False', 'Tema B'])
+        
     assert 'invalid.csv' in _codigos(exc)
 
 

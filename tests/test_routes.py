@@ -36,6 +36,7 @@ def test_get_clases(client, monkeypatch):
 def test_put_clase_sin_token(client):
     r = client.put('/ids_api/cronograma/clases/1',
                    json={'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual'})
+
     assert r.status_code == 401
 
 
@@ -43,6 +44,7 @@ def test_put_clase_rol_insuficiente(client):
     r = client.put('/ids_api/cronograma/clases/1',
                    json={'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual'},
                    headers=_auth(rol='otro'))
+
     assert r.status_code == 403
 
 
@@ -68,6 +70,7 @@ def test_put_clase_ok(client, monkeypatch):
 
 def test_post_csv_sin_archivo(client):
     r = client.post('/ids_api/cronograma/csv', headers=_auth())
+    
     assert r.status_code == 400
     assert r.get_json()['errors'][0]['code'] == 'file.missing'
 

@@ -34,14 +34,17 @@ def test_actualizar_clase_ok_deriva_semana(monkeypatch):
     res = cronograma.actualizar_clase(
         1, {'semana': 9, 'fecha': '2026-08-17', 'tipo': 'Virtual', 'titulo': 'y', 'contenidos': []},
     )
+
     assert res['fecha'] == '2026-08-17'
     assert reg['semana'] == 1   # se deriva de la fecha, no se usa la del body (9)
 
 
 def test_actualizar_clase_404(monkeypatch):
     monkeypatch.setattr(db, 'obtener_clase_por_id', lambda cid: {})
+
     with pytest.raises(ValueError) as exc:
         cronograma.actualizar_clase(999, {'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual'})
+
     assert exc.value.args[1] == 404
 
 
@@ -51,15 +54,19 @@ def test_actualizar_clase_404(monkeypatch):
 ])
 def test_actualizar_clase_fecha_invalida(monkeypatch, fecha, code):
     _mock_clase(monkeypatch)
+
     with pytest.raises(ValueError) as exc:
         cronograma.actualizar_clase(1, {'semana': 1, 'fecha': fecha, 'tipo': 'Virtual'})
+
     assert code in _codigos(exc)
 
 
 def test_actualizar_clase_fecha_ocupada(monkeypatch):
     _mock_clase(monkeypatch, ocupa={'2026-08-19': {'id': 2, 'fecha': '2026-08-19'}})
+
     with pytest.raises(ValueError) as exc:
         cronograma.actualizar_clase(1, {'semana': 1, 'fecha': '2026-08-19', 'tipo': 'Virtual'})
+
     assert _codigos(exc) == ['fecha.duplicated']
     assert exc.value.args[1] == 409
 
@@ -91,8 +98,10 @@ def test_importar_completa_a_32_y_persiste(monkeypatch):
 
 def test_crear_docente_email_duplicado(monkeypatch):
     monkeypatch.setattr(db, 'obtener_docente_por_email', lambda e: {'id': 2, 'email': e})
+
     with pytest.raises(ValueError) as exc:
         docentes.crear_docente({'nombre': 'A', 'apellido': 'B', 'rol': 'Ayudante', 'email': 'a@fi.uba.ar'})
+        
     assert _codigos(exc) == ['email.duplicated']
     assert exc.value.args[1] == 409
 
@@ -106,4 +115,5 @@ def test_crear_docente_ok(monkeypatch):
     monkeypatch.setattr(docentes, 'obtener_imagen_base64', lambda p: None)
 
     res = docentes.crear_docente({'nombre': 'A', 'apellido': 'B', 'rol': 'Ayudante', 'email': 'a@fi.uba.ar'})
+
     assert res['id'] == 99 and res['foto'] is None
