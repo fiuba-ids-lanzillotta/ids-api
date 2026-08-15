@@ -62,6 +62,12 @@ Arguments: **$ARGUMENTS** = the Monday of the first week and the Monday of the l
    python -m compileall -q ids_api app.py
    ```
 
+## Impact on ids-web
+
+Low: `ids-web` renders the cronograma from whatever the API returns, so the new dates flow through
+automatically. Only check the admin CSV help text in `ids-web/templates/admin/calendario.html` in
+case it references specific dates (it should stay generic).
+
 ## Notes
 
 - `_semana_de_fecha` and `semanas_esperadas` derive everything from the constants, so no service

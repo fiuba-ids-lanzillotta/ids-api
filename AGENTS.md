@@ -22,7 +22,11 @@ python app.py
 
 Requires a `.env` (see `.env.example`): `SUPABASE_URL`, `SUPABASE_KEY`, `JWT_SECRET`,
 `ADMIN_USER`, `ADMIN_PASSWORD` (bcrypt hash), optional `CORS_ORIGINS`, `JWT_EXPIRACION_HORAS`,
-`SUPABASE_BUCKET_DOCENTES`. The API is mounted under `/ids_api`.
+`SUPABASE_BUCKET_DOCENTES`, `CACHE_MAX_AGE`, `API_KEY`. The API is mounted under `/ids_api`.
+
+`API_KEY` (if set) restricts consumption to the frontend: every request must send `X-API-Key`
+with that value. It is shared with `ids-web` and the Bruno collection — rotate it in all of them
+at once (see the `manage-secrets` skill).
 
 ## Verification (run before considering a change done)
 
@@ -50,6 +54,9 @@ in order to import/test.
   400) and routes translate them to `jsonify(payload), status`. Payload shape:
   `{"errors": [{"code", "message", "level", "description"}]}`.
 - Don't add/remove comments needlessly; mirror the existing style.
+- **Any change to the API contract** (endpoints, DTO fields, status codes, `API_KEY`) can break the
+  consumer `ids-web` (`../ids-web`). Verify `web/services/*.py` and the templates; if it breaks,
+  propose (and, if agreed, apply) the `ids-web` change instead of leaving it broken.
 
 ## Domain (gotchas)
 

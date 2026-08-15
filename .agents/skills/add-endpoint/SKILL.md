@@ -61,4 +61,19 @@ Add a new endpoint: **$ARGUMENTS**. Read `AGENTS.md` first and mirror the existi
    python -m compileall -q ids_api app.py
    ```
 
-Report the files added/changed and the status codes the new endpoint can return.
+## Impact on ids-web (mandatory check)
+
+This changes the API contract, so it can affect the frontend `ids-web` (`../ids-web`), the only
+consumer of this API. Before finishing:
+
+- Check whether `ids-web` consumes the affected endpoint: look in `web/services/*.py` (the
+  `requests` calls) and the templates that render the data.
+- If the change **breaks** `ids-web` (e.g., a renamed/removed field, a new required body field, a
+  changed status code the front doesn't handle), **do not leave it silently broken**: report
+  exactly what to update there (which `web/services/<recurso>.py` call, which field in which
+  template) and, if the user agrees, apply it in `ids-web`.
+- Remember requests to the API must carry `X-API-Key` (via `api_headers()` in `web/constants.py`)
+  when the backend has `API_KEY` set.
+
+Report the files added/changed, the status codes the new endpoint can return, and any required
+`ids-web` change.

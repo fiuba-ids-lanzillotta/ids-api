@@ -47,6 +47,17 @@ Apply the schema change: **$ARGUMENTS**. Keep every layer consistent. Read `AGEN
    python -m compileall -q ids_api app.py
    ```
 
+## Impact on ids-web (mandatory check)
+
+Changing a table usually changes the DTO the API returns, which can break the frontend `ids-web`
+(`../ids-web`). Before finishing:
+
+- Check whether `ids-web` reads the changed field: look in `web/services/*.py` (e.g.
+  `_clase_para_vista`, the docente mapping) and the templates that render it.
+- If the change **breaks** `ids-web` (renamed/removed field, changed type), **do not leave it
+  silently broken**: report exactly what to update there (which service function, which template
+  field) and, if the user agrees, apply it in `ids-web`.
+
 ## Notes
 
 - Prefer `VARCHAR` + Python-side validation over DB `ENUM`/`CHECK` (portability convention).
