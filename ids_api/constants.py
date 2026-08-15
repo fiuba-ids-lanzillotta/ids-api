@@ -22,6 +22,9 @@ DIAS_CLASE    = (0, 2)              # weekday(): lunes=0, miércoles=2
 TIPO_CLASE_DEFAULT   = 'Virtual'
 TITULO_CLASE_DEFAULT = 'A definir'
 
+# Formato de fecha ISO (YYYY-MM-DD) usado internamente y en el JSON de la API
+FECHA_ISO_FORMATO = '%Y-%m-%d'
+
 # Restricciones de las fotos de docentes (la config del bucket vive en config.py)
 EXTENSIONES_IMAGEN = ('png', 'jpg', 'jpeg', 'gif', 'webp')
 MAX_IMAGEN_MB = 5

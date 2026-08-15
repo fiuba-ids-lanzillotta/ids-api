@@ -13,6 +13,7 @@ from .config import (
     JWT_EXP_HORAS,
 )
 from .constants import (
+    FECHA_ISO_FORMATO,
     ERROR_CODE_INVALID_MIN_VALUE,
     ERROR_CODE_INVALID_MAX_VALUE,
     ERROR_CODE_INVALID_EMAIL,
@@ -132,7 +133,7 @@ def validar_fecha(valor, nombre: str = 'fecha') -> str:
     valor = validar_string_no_vacio(valor, nombre)
 
     try:
-        datetime.strptime(valor, '%Y-%m-%d')
+        datetime.strptime(valor, FECHA_ISO_FORMATO)
     except ValueError:
         raise ValueError(construir_error_api(
             code=f'invalid.{nombre}.format',

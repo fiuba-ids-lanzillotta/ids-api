@@ -3,6 +3,7 @@ import io
 from datetime import date, datetime, timedelta
 
 from ..constants import (
+    FECHA_ISO_FORMATO,
     INICIO_CLASES,
     FIN_CLASES,
     DIAS_CLASE,
@@ -319,7 +320,7 @@ def _fecha_iso_a_csv(fecha) -> str:
     if hasattr(fecha, 'strftime'):
         return fecha.strftime(FECHA_CSV_FORMATO)
 
-    return datetime.strptime(fecha, '%Y-%m-%d').strftime(FECHA_CSV_FORMATO)
+    return datetime.strptime(fecha, FECHA_ISO_FORMATO).strftime(FECHA_CSV_FORMATO)
 
 
 def _parsear_csv(contenido: str) -> list[dict]:
