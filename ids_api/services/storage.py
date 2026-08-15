@@ -4,8 +4,8 @@ import logging
 import re
 import uuid
 
+from ..config import SUPABASE_BUCKET_DOCENTES
 from ..constants import (
-    SUPABASE_BUCKET_DOCENTES,
     EXTENSIONES_IMAGEN,
     MAX_IMAGEN_MB,
     ERROR_CODE_INVALID_IMAGEN,

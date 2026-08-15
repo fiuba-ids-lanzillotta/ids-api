@@ -1,8 +1,10 @@
 import hmac
 
-from ..constants import (
+from ..config import (
     ADMIN_USER,
     ADMIN_PASSWORD,
+)
+from ..constants import (
     ROL_ADMIN,
     ERROR_CODE_CREDENCIALES,
 )

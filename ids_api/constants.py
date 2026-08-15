@@ -1,8 +1,4 @@
-import os
 from datetime import date
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # URL base de la API
 BASE_URL = '/ids_api'
@@ -26,24 +22,7 @@ DIAS_CLASE    = (0, 2)              # weekday(): lunes=0, miércoles=2
 TIPO_CLASE_DEFAULT   = 'Virtual'
 TITULO_CLASE_DEFAULT = 'A definir'
 
-# Credenciales del panel de administración (único usuario, vía variables de entorno).
-# ADMIN_PASSWORD es un hash bcrypt del password (no el password en texto plano).
-ADMIN_USER     = os.getenv('ADMIN_USER', 'admin')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
-
-# Configuración JWT
-JWT_SECRET     = os.getenv('JWT_SECRET', 'change-me-please')
-JWT_ALGORITHM  = 'HS256'
-JWT_EXP_HORAS  = int(os.getenv('JWT_EXP_HORAS', '8'))
-
-# Configuración de Supabase. El backend usa la key service_role (no se expone
-# al frontend). En local, ambos valores los imprime `supabase start`.
-SUPABASE_URL = os.getenv('SUPABASE_URL', '')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY', '')
-
-# Bucket (privado) donde se guardan las fotos de los docentes. La API sube y
-# descarga las imágenes; al frontend se le devuelven como base64 (data URI).
-SUPABASE_BUCKET_DOCENTES = os.getenv('SUPABASE_BUCKET_DOCENTES', 'docentes-fotos')
+# Restricciones de las fotos de docentes (la config del bucket vive en config.py)
 EXTENSIONES_IMAGEN = ('png', 'jpg', 'jpeg', 'gif', 'webp')
 MAX_IMAGEN_MB = 5
 

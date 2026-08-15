@@ -7,10 +7,12 @@ import bcrypt
 import jwt
 from flask import request, jsonify
 
-from .constants import (
+from .config import (
     JWT_SECRET,
     JWT_ALGORITHM,
     JWT_EXP_HORAS,
+)
+from .constants import (
     ERROR_CODE_INVALID_MIN_VALUE,
     ERROR_CODE_INVALID_MAX_VALUE,
     ERROR_CODE_INVALID_EMAIL,

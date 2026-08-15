@@ -1,6 +1,6 @@
 from supabase import create_client, Client
 
-from .constants import SUPABASE_URL, SUPABASE_KEY
+from .config import SUPABASE_URL, SUPABASE_KEY
 
 # Cliente de Supabase compartido por toda la aplicación (habla PostgREST).
 cliente: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
