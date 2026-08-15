@@ -33,10 +33,10 @@ def get_docente(docente_id):
     try:
         id_validado = validar_minimo(validar_entero(docente_id, 'id'), 1, 'id')
         docente = buscar_docente_por_id(id_validado)
-    except ValueError as e:
-        status = e.args[1] if len(e.args) > 1 else 400
+    except ValueError as error:
+        status = error.args[1] if len(error.args) > 1 else 400
 
-        return jsonify(e.args[0]), status
+        return jsonify(error.args[0]), status
 
     return jsonify(docente)
 
@@ -48,10 +48,10 @@ def post_docente():
 
     try:
         docente = crear_docente(body)
-    except ValueError as e:
-        status = e.args[1] if len(e.args) > 1 else 400
+    except ValueError as error:
+        status = error.args[1] if len(error.args) > 1 else 400
 
-        return jsonify(e.args[0]), status
+        return jsonify(error.args[0]), status
 
     return jsonify(docente), 201
 
@@ -64,10 +64,10 @@ def put_docente(docente_id):
     try:
         id_validado = validar_minimo(validar_entero(docente_id, 'id'), 1, 'id')
         docente = actualizar_docente(id_validado, body)
-    except ValueError as e:
-        status = e.args[1] if len(e.args) > 1 else 400
+    except ValueError as error:
+        status = error.args[1] if len(error.args) > 1 else 400
 
-        return jsonify(e.args[0]), status
+        return jsonify(error.args[0]), status
 
     return jsonify(docente)
 
@@ -78,9 +78,9 @@ def delete_docente(docente_id):
     try:
         id_validado = validar_minimo(validar_entero(docente_id, 'id'), 1, 'id')
         eliminar_docente_por_id(id_validado)
-    except ValueError as e:
-        status = e.args[1] if len(e.args) > 1 else 400
+    except ValueError as error:
+        status = error.args[1] if len(error.args) > 1 else 400
 
-        return jsonify(e.args[0]), status
+        return jsonify(error.args[0]), status
 
     return '', 204

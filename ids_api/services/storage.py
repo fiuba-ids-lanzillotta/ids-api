@@ -68,8 +68,8 @@ def subir_imagen_base64(data_uri: str) -> str:
             file=contenido,
             file_options={'content-type': f'image/{extension}'},
         )
-    except Exception as e:
-        logger.error(f'Error al subir imagen al bucket: {e}')
+    except Exception as error:
+        logger.error(f'Error al subir imagen al bucket: {error}')
 
         raise ValueError(construir_error_api(
             code=ERROR_CODE_IMAGEN_UPLOAD,
@@ -87,15 +87,15 @@ def obtener_imagen_base64(path: str) -> str | None:
 
     try:
         contenido = db.cliente.storage.from_(SUPABASE_BUCKET_DOCENTES).download(path)
-    except Exception as e:
-        logger.error(f"Error al descargar imagen '{path}': {e}")
+    except Exception as error:
+        logger.error(f"Error al descargar imagen '{path}': {error}")
 
         return None
 
     extension = path.rsplit('.', 1)[1].lower() if '.' in path else 'jpeg'
-    b64 = base64.b64encode(contenido).decode('utf-8')
+    contenido_base64 = base64.b64encode(contenido).decode('utf-8')
 
-    return f'data:image/{extension};base64,{b64}'
+    return f'data:image/{extension};base64,{contenido_base64}'
 
 
 def borrar_imagen(path: str) -> None:
@@ -105,5 +105,5 @@ def borrar_imagen(path: str) -> None:
 
     try:
         db.cliente.storage.from_(SUPABASE_BUCKET_DOCENTES).remove([path])
-    except Exception as e:
-        logger.error(f"Error al borrar imagen '{path}': {e}")
+    except Exception as error:
+        logger.error(f"Error al borrar imagen '{path}': {error}")

@@ -34,10 +34,10 @@ def put_clase(clase_id):
     try:
         id_validado = validar_minimo(validar_entero(clase_id, 'id'), 1, 'id')
         clase = actualizar_clase(id_validado, body)
-    except ValueError as e:
-        status = e.args[1] if len(e.args) > 1 else 400
+    except ValueError as error:
+        status = error.args[1] if len(error.args) > 1 else 400
 
-        return jsonify(e.args[0]), status
+        return jsonify(error.args[0]), status
 
     return jsonify(clase)
 
@@ -82,9 +82,9 @@ def _importar_csv(reemplazar: bool, status_ok: int):
 
     try:
         clases = importar_cronograma_csv(contenido, reemplazar=reemplazar)
-    except ValueError as e:
-        status = e.args[1] if len(e.args) > 1 else 400
+    except ValueError as error:
+        status = error.args[1] if len(error.args) > 1 else 400
 
-        return jsonify(e.args[0]), status
+        return jsonify(error.args[0]), status
 
     return jsonify(clases), status_ok

@@ -47,10 +47,10 @@ def semanas_esperadas() -> list[tuple[int, str]]:
     total  = (fin - inicio).days // 7 + 1
 
     esperadas = []
-    for w in range(total):
-        lunes = inicio + timedelta(weeks=w)
+    for indice_semana in range(total):
+        lunes = inicio + timedelta(weeks=indice_semana)
         for dia in DIAS_CLASE:
-            esperadas.append((w + 1, (lunes + timedelta(days=dia)).isoformat()))
+            esperadas.append((indice_semana + 1, (lunes + timedelta(days=dia)).isoformat()))
 
     return esperadas
 
@@ -60,19 +60,19 @@ def _semana_de_fecha(fecha_iso: str) -> int | None:
     Retorna el número de semana (1..N) al que pertenece una fecha dentro del
     período, o None si la fecha está fuera del período o no es un día de clase.
     """
-    d = date.fromisoformat(fecha_iso)
+    fecha = date.fromisoformat(fecha_iso)
 
-    if d.weekday() not in DIAS_CLASE:
+    if fecha.weekday() not in DIAS_CLASE:
         return None
 
-    inicio  = _lunes_de(INICIO_CLASES)
-    fin     = _lunes_de(FIN_CLASES)
-    lunes_d = _lunes_de(d)
+    inicio      = _lunes_de(INICIO_CLASES)
+    fin         = _lunes_de(FIN_CLASES)
+    lunes_fecha = _lunes_de(fecha)
 
-    if lunes_d < inicio or lunes_d > fin:
+    if lunes_fecha < inicio or lunes_fecha > fin:
         return None
 
-    return (lunes_d - inicio).days // 7 + 1
+    return (lunes_fecha - inicio).days // 7 + 1
 
 
 def _clase_default(semana: int, fecha_iso: str) -> dict:
@@ -93,7 +93,7 @@ def _completar_clases(clases: list[dict]) -> list[dict]:
     esperada (lunes/miércoles) que no esté en `clases`, agrega una clase default.
     Retorna la lista completa ordenada cronológicamente.
     """
-    por_fecha = {c['fecha']: c for c in clases}
+    por_fecha = {clase['fecha']: clase for clase in clases}
 
     return [
         por_fecha.get(fecha) or _clase_default(semana, fecha)
@@ -111,7 +111,7 @@ def construir_clase_dto(clase: dict, contenidos: list[dict]) -> dict:
         'fecha':      fecha.isoformat() if hasattr(fecha, 'isoformat') else fecha,
         'tipo':       clase['tipo'],
         'titulo':     clase['titulo'],
-        'contenidos': [{'texto': c['texto'], 'hito': c['hito']} for c in contenidos],
+        'contenidos': [{'texto': contenido['texto'], 'hito': contenido['hito']} for contenido in contenidos],
     }
 
 
@@ -133,7 +133,7 @@ def listar_clases() -> list[dict]:
     default (no se persisten; solo se devuelven).
     """
     por_clase = _agrupar_contenidos(db.obtener_todos_los_contenidos())
-    dtos = [construir_clase_dto(c, por_clase.get(c['id'], [])) for c in db.obtener_todas_las_clases()]
+    dtos = [construir_clase_dto(clase, por_clase.get(clase['id'], [])) for clase in db.obtener_todas_las_clases()]
 
     return _completar_clases(dtos)
 
@@ -261,8 +261,8 @@ def _reemplazar_cronograma(clases: list[dict]) -> None:
     db.eliminar_todo_el_cronograma()
 
     filas = db.insertar_clases([
-        {'semana': c['semana'], 'fecha': c['fecha'], 'tipo': c['tipo'], 'titulo': c['titulo']}
-        for c in clases
+        {'semana': clase['semana'], 'fecha': clase['fecha'], 'tipo': clase['tipo'], 'titulo': clase['titulo']}
+        for clase in clases
     ])
     id_por_fecha = {fila['fecha']: fila['id'] for fila in filas}
 
@@ -325,7 +325,7 @@ def _fecha_iso_a_csv(fecha) -> str:
 
 def _parsear_csv(contenido: str) -> list[dict]:
     """Parsea el CSV a una lista de clases validadas. Acumula errores por fila."""
-    filas = [f for f in csv.reader(io.StringIO(contenido)) if any(c.strip() for c in f)]
+    filas = [fila for fila in csv.reader(io.StringIO(contenido)) if any(celda.strip() for celda in fila)]
 
     if not filas:
         raise ValueError(construir_error_api(
@@ -345,11 +345,11 @@ def _parsear_csv(contenido: str) -> list[dict]:
     for nro_fila, campos in enumerate(filas, start=1):
         try:
             datos = _parsear_fila(campos)
-        except ValueError as e:
-            for err in e.args[0]['errors']:
-                err = dict(err)
-                err['description'] = f"Fila {nro_fila}: {err['description']}"
-                errores.append(err)
+        except ValueError as error:
+            for detalle in error.args[0]['errors']:
+                detalle = dict(detalle)
+                detalle['description'] = f"Fila {nro_fila}: {detalle['description']}"
+                errores.append(detalle)
             continue
 
         if datos['fecha'] in fechas_vistas:
@@ -382,15 +382,15 @@ def _parsear_fila(campos: list[str]) -> dict:
 
     try:
         fecha_iso = _parsear_fecha_csv(campos[1] if len(campos) > 1 else None)
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     contenidos = []
 
     try:
         contenidos = _parsear_contenidos(campos[4:])
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     body = {
         'semana':     semana,
@@ -404,12 +404,12 @@ def _parsear_fila(campos: list[str]) -> dict:
 
     try:
         datos = validar_body_clase(body)
-    except ValueError as e:
-        for err in e.args[0]['errors']:
+    except ValueError as error:
+        for detalle in error.args[0]['errors']:
             # No duplicar el error de fecha si ya lo reportamos arriba.
-            if fecha_iso is None and str(err.get('code', '')).startswith('invalid.fecha'):
+            if fecha_iso is None and str(detalle.get('code', '')).startswith('invalid.fecha'):
                 continue
-            errores.append(err)
+            errores.append(detalle)
 
     # Validaciones de dominio: la fecha debe ser un día de clase válido del
     # período y la semana informada debe coincidir con la calculada.
@@ -422,20 +422,20 @@ def _parsear_fila(campos: list[str]) -> dict:
     return datos
 
 
-def _validar_fecha_periodo(fecha_iso: str, semana_raw) -> list[dict]:
+def _validar_fecha_periodo(fecha_iso: str, semana_informada) -> list[dict]:
     """Valida que la fecha sea lunes/miércoles, esté en el período y que la semana coincida."""
-    d = date.fromisoformat(fecha_iso)
+    fecha = date.fromisoformat(fecha_iso)
 
-    if d.weekday() not in DIAS_CLASE:
+    if fecha.weekday() not in DIAS_CLASE:
         return [construir_error_api(
             code=ERROR_CODE_FECHA_DIA_INVALIDO,
             message='Día de clase inválido',
             description=f"La fecha {fecha_iso} no es lunes ni miércoles"
         )['errors'][0]]
 
-    semana_calc = _semana_de_fecha(fecha_iso)
+    semana_calculada = _semana_de_fecha(fecha_iso)
 
-    if semana_calc is None:
+    if semana_calculada is None:
         return [construir_error_api(
             code=ERROR_CODE_FECHA_FUERA_PERIODO,
             message='Fecha fuera del período',
@@ -443,15 +443,15 @@ def _validar_fecha_periodo(fecha_iso: str, semana_raw) -> list[dict]:
         )['errors'][0]]
 
     try:
-        semana_int = int(str(semana_raw))
+        semana_informada_numero = int(str(semana_informada))
     except (ValueError, TypeError):
         return []  # el error de 'semana' ya lo reporta validar_body_clase
 
-    if semana_int != semana_calc:
+    if semana_informada_numero != semana_calculada:
         return [construir_error_api(
             code=ERROR_CODE_SEMANA_INCORRECTA,
             message='Semana incorrecta',
-            description=f"La semana {semana_int} no corresponde a la fecha {fecha_iso} (semana esperada: {semana_calc})"
+            description=f"La semana {semana_informada_numero} no corresponde a la fecha {fecha_iso} (semana esperada: {semana_calculada})"
         )['errors'][0]]
 
     return []
@@ -487,10 +487,10 @@ def _parsear_contenidos(campos: list[str]) -> list[dict]:
         ))
 
     contenidos = []
-    
-    for i in range(0, len(campos), 2):
-        texto = campos[i].strip()
-        hito  = _parsear_hito(campos[i + 1])
+
+    for indice in range(0, len(campos), 2):
+        texto = campos[indice].strip()
+        hito  = _parsear_hito(campos[indice + 1])
 
         if texto:
             contenidos.append({'texto': texto, 'hito': hito})
@@ -500,11 +500,11 @@ def _parsear_contenidos(campos: list[str]) -> list[dict]:
 
 def _parsear_hito(valor) -> bool:
     """Interpreta el flag de hito del CSV (True/False, 1/0)."""
-    v = (valor or '').strip().lower()
+    valor_normalizado = (valor or '').strip().lower()
 
-    if v in ('true', '1', 'si', 'sí'):
+    if valor_normalizado in ('true', '1', 'si', 'sí'):
         return True
-    if v in ('false', '0', 'no', ''):
+    if valor_normalizado in ('false', '0', 'no', ''):
         return False
 
     raise ValueError(construir_error_api(

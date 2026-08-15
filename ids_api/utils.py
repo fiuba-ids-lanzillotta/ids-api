@@ -220,8 +220,8 @@ def requiere_auth(rol: str = None):
             try:
                 token   = extraer_token_del_header()
                 payload = decodificar_token(token)
-            except ValueError as e:
-                return jsonify(e.args[0]), e.args[1] if len(e.args) > 1 else 401
+            except ValueError as error:
+                return jsonify(error.args[0]), error.args[1] if len(error.args) > 1 else 401
 
             if rol is not None and payload.get('rol') != rol:
                 return jsonify(construir_error_api(

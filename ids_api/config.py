@@ -31,4 +31,4 @@ SUPABASE_BUCKET_DOCENTES = os.getenv('SUPABASE_BUCKET_DOCENTES', 'docentes-fotos
 
 # Orígenes permitidos para CORS (lista separada por comas). Default '*' (todos);
 # en producción conviene restringirlo al dominio del frontend.
-CORS_ORIGINS = [o.strip() for o in os.getenv('CORS_ORIGINS', '*').split(',') if o.strip()]
+CORS_ORIGINS = [origen.strip() for origen in os.getenv('CORS_ORIGINS', '*').split(',') if origen.strip()]

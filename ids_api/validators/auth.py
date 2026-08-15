@@ -24,13 +24,13 @@ def validar_body_login(body: dict) -> dict:
 
     try:
         usuario = validar_string_no_vacio(body.get('usuario'), 'usuario')
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     try:
         password = validar_string_no_vacio(body.get('password'), 'password')
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     if errores:
         raise ValueError({'errors': errores})

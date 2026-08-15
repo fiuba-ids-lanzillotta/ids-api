@@ -5,7 +5,7 @@ from .storage import subir_imagen_base64, obtener_imagen_base64, borrar_imagen
 from .. import db
 
 # Prioridad de orden por rol: Profesor, luego Ayudantes, luego Colaboradores.
-_ORDEN_ROL = {rol: i for i, rol in enumerate(ROLES_DOCENTE)}
+_ORDEN_ROL = {rol: indice for indice, rol in enumerate(ROLES_DOCENTE)}
 
 
 def construir_docente_dto(docente: dict) -> dict:
@@ -23,9 +23,9 @@ def construir_docente_dto(docente: dict) -> dict:
 def listar_docentes() -> list[dict]:
     """Retorna los docentes ordenados por rol (Profesor, Ayudante, Colaborador) y luego por id."""
     docentes = db.obtener_todos_los_docentes()
-    docentes.sort(key=lambda d: (_ORDEN_ROL.get(d['rol'], len(ROLES_DOCENTE)), d['id']))
+    docentes.sort(key=lambda docente: (_ORDEN_ROL.get(docente['rol'], len(ROLES_DOCENTE)), docente['id']))
 
-    return [construir_docente_dto(d) for d in docentes]
+    return [construir_docente_dto(docente) for docente in docentes]
 
 
 def buscar_docente_por_id(docente_id: int) -> dict:

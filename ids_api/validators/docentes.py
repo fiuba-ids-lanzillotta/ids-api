@@ -30,14 +30,14 @@ def validar_body_docente(body: dict) -> dict:
     try:
         nombre = validar_string_no_vacio(body.get('nombre'), 'nombre')
         nombre = validar_largo_string(nombre, 1, 100, 'nombre')
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     try:
         apellido = validar_string_no_vacio(body.get('apellido'), 'apellido')
         apellido = validar_largo_string(apellido, 1, 100, 'apellido')
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     try:
         rol = validar_string_no_vacio(body.get('rol'), 'rol')
@@ -48,15 +48,15 @@ def validar_body_docente(body: dict) -> dict:
                 message='Rol de docente inválido',
                 description=f"El rol '{rol}' no es válido. Valores permitidos: {', '.join(ROLES_DOCENTE)}"
             ))
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     # email opcional
     if body.get('email') is not None and str(body.get('email')).strip():
         try:
             email = validar_formato_email(validar_string_no_vacio(body.get('email'), 'email'))
-        except ValueError as e:
-            errores.extend(e.args[0]['errors'])
+        except ValueError as error:
+            errores.extend(error.args[0]['errors'])
 
     # foto opcional: data URI base64. La validación del contenido (formato,
     # extensión, tamaño) y la subida al bucket las hace services/storage.

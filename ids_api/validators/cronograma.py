@@ -66,13 +66,13 @@ def validar_body_clase(body: dict) -> dict:
 
     try:
         semana = validar_minimo(validar_entero(body.get('semana'), 'semana'), 1, 'semana')
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     try:
         fecha = validar_fecha(body.get('fecha'), 'fecha')
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     try:
         tipo = validar_string_no_vacio(body.get('tipo'), 'tipo')
@@ -83,13 +83,13 @@ def validar_body_clase(body: dict) -> dict:
                 message='Tipo de clase inválido',
                 description=f"El tipo '{tipo}' no es válido. Valores permitidos: {', '.join(TIPOS_CLASE)}"
             ))
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     try:
         contenidos = _normalizar_contenidos(body.get('contenidos'))
-    except ValueError as e:
-        errores.extend(e.args[0]['errors'])
+    except ValueError as error:
+        errores.extend(error.args[0]['errors'])
 
     # Campo opcional de texto
     titulo = body.get('titulo')
