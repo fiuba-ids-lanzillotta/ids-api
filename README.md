@@ -68,7 +68,8 @@ ids-api/
 │       └── cronograma.py
 │
 ├── db/
-│   └── init_db.sql              # Esquema + seed (para correr en Supabase)
+│   ├── init_db.sql              # Esquema + seed (para correr en Supabase)
+│   └── schema.md                # Diagrama entidad-relación (Mermaid)
 ├── docs/
 │   └── swagger.yaml             # Documentación OpenAPI 3.0 de la API
 └── tests/                       # Tests (pytest): utils, validators, servicios y rutas
@@ -126,6 +127,7 @@ python -c "import bcrypt; print(bcrypt.hashpw(b'tu-password', bcrypt.gensalt()).
 ### 2. Base de datos (Supabase)
 
 El backend habla con Supabase a través de su cliente (PostgREST), no ejecuta SQL desde la app.
+El esquema y el diagrama entidad-relación están en [`db/schema.md`](db/schema.md).
 
 #### Desarrollo local con la CLI de Supabase
 
