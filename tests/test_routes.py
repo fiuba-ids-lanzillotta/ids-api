@@ -29,7 +29,7 @@ def test_get_clases(client, monkeypatch):
     assert respuesta.status_code == 200
     assert len(datos) == 32
     assert datos[0]['tipo'] == 'Virtual'
-    assert 's-maxage' in respuesta.headers.get('Cache-Control', '')
+    assert respuesta.headers.get('Cache-Control') == 'no-store'
 
 
 # --- PUT /cronograma/clases/<id> (auth admin) ---
@@ -122,3 +122,14 @@ def test_api_key_valida_pasa(client, monkeypatch):
 
     assert respuesta.status_code == 200
     assert len(respuesta.get_json()) == 32
+
+
+# --- rate limiting ---
+
+def test_rate_limit_excedido_429(client, monkeypatch):
+    monkeypatch.setattr(app_module, 'esta_permitido', lambda identificador: False)
+
+    respuesta = client.get('/ids_api/cronograma/clases')
+
+    assert respuesta.status_code == 429
+    assert respuesta.get_json()['errors'][0]['code'] == 'rate.limit.exceeded'

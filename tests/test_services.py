@@ -1,7 +1,7 @@
 """Tests de servicios con la capa de datos (db) mockeada; no tocan Supabase."""
 import pytest
 
-from ids_api import db
+from ids_api import db, cache
 from ids_api.services import cronograma, docentes
 
 
@@ -37,6 +37,26 @@ def test_actualizar_clase_ok_deriva_semana(monkeypatch):
 
     assert resultado['fecha'] == '2026-08-17'
     assert registro['semana'] == 1   # se deriva de la fecha, no se usa la del body (9)
+
+
+def test_listar_clases_usa_cache(monkeypatch):
+    # Si el cache tiene valor, no debe tocar la base.
+    monkeypatch.setattr(cache, 'obtener', lambda clave: [{'cacheado': True}])
+
+    assert cronograma.listar_clases() == [{'cacheado': True}]
+
+
+def test_actualizar_clase_invalida_cache(monkeypatch):
+    _mock_clase(monkeypatch)
+    monkeypatch.setattr(cache, 'obtener', lambda clave: None)
+    invalidadas = []
+    monkeypatch.setattr(cache, 'invalidar', lambda *claves: invalidadas.extend(claves))
+
+    cronograma.actualizar_clase(
+        1, {'semana': 1, 'fecha': '2026-08-17', 'tipo': 'Virtual', 'titulo': 'x', 'contenidos': []},
+    )
+
+    assert 'cronograma:clases' in invalidadas
 
 
 def test_actualizar_clase_404(monkeypatch):

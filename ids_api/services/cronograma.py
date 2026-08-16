@@ -17,9 +17,13 @@ from ..constants import (
     ERROR_CODE_FECHA_FUERA_PERIODO,
     ERROR_CODE_SEMANA_INCORRECTA,
 )
+from ..config import CACHE_TTL_CRONOGRAMA_SEGUNDOS
 from ..utils import construir_error_api
 from ..validators.cronograma import validar_body_clase
-from .. import db
+from .. import db, cache
+
+# Clave de cache del cronograma completo (se invalida en cada escritura).
+_CACHE_CLASES = 'cronograma:clases'
 
 # Formato de fecha usado en el CSV (DD/MM/AAAA).
 FECHA_CSV_FORMATO = '%d/%m/%Y'
@@ -130,12 +134,20 @@ def listar_clases() -> list[dict]:
     Retorna el cronograma completo del período (lista plana).
 
     Las fechas lunes/miércoles que no estén cargadas se completan con clases
-    default (no se persisten; solo se devuelven).
+    default (no se persisten; solo se devuelven). El resultado se cachea en Redis
+    y se invalida en cada escritura del cronograma.
     """
+    cacheada = cache.obtener(_CACHE_CLASES)
+    if cacheada is not None:
+        return cacheada
+
     por_clase = _agrupar_contenidos(db.obtener_todos_los_contenidos())
     dtos = [construir_clase_dto(clase, por_clase.get(clase['id'], [])) for clase in db.obtener_todas_las_clases()]
+    resultado = _completar_clases(dtos)
 
-    return _completar_clases(dtos)
+    cache.guardar(_CACHE_CLASES, resultado, CACHE_TTL_CRONOGRAMA_SEGUNDOS)
+
+    return resultado
 
 
 def buscar_clase_por_id(clase_id: int) -> dict:
@@ -168,6 +180,7 @@ def actualizar_clase(clase_id: int, body: dict) -> dict:
     )
 
     _reemplazar_contenidos(clase_id, datos['contenidos'])
+    cache.invalidar(_CACHE_CLASES)
 
     return buscar_clase_por_id(clase_id)
 
@@ -278,6 +291,7 @@ def _reemplazar_cronograma(clases: list[dict]) -> None:
             })
 
     db.insertar_contenidos(contenidos)
+    cache.invalidar(_CACHE_CLASES)
 
 
 def exportar_cronograma_csv() -> str:

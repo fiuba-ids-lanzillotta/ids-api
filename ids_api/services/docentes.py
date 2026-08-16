@@ -1,11 +1,15 @@
+from ..config import CACHE_TTL_DOCENTES_SEGUNDOS
 from ..constants import ERROR_CODE_DOCENTE_NOT_FOUND, ERROR_CODE_EMAIL_DUPLICADO, ROLES_DOCENTE
 from ..utils import construir_error_api
 from ..validators.docentes import validar_body_docente
 from .storage import subir_imagen_base64, obtener_imagen_base64, borrar_imagen
-from .. import db
+from .. import db, cache
 
 # Prioridad de orden por rol: Profesor, luego Ayudantes, luego Colaboradores.
 _ORDEN_ROL = {rol: indice for indice, rol in enumerate(ROLES_DOCENTE)}
+
+# Clave de cache de las filas de docentes (metadata, sin las fotos base64).
+_CACHE_DOCENTES = 'docentes:filas'
 
 
 def construir_docente_dto(docente: dict) -> dict:
@@ -21,11 +25,21 @@ def construir_docente_dto(docente: dict) -> dict:
 
 
 def listar_docentes() -> list[dict]:
-    """Retorna los docentes ordenados por rol (Profesor, Ayudante, Colaborador) y luego por id."""
-    docentes = db.obtener_todos_los_docentes()
-    docentes.sort(key=lambda docente: (_ORDEN_ROL.get(docente['rol'], len(ROLES_DOCENTE)), docente['id']))
+    """
+    Retorna los docentes ordenados por rol (Profesor, Ayudante, Colaborador) y luego por id.
 
-    return [construir_docente_dto(docente) for docente in docentes]
+    Las filas (metadata, incluido el path de la foto) se cachean en Redis y se
+    invalidan en cada escritura. Las fotos NO van a Redis: se resuelven del bucket
+    en `construir_docente_dto` (con su propio cache en proceso).
+    """
+    filas = cache.obtener(_CACHE_DOCENTES)
+    if filas is None:
+        filas = db.obtener_todos_los_docentes()
+        cache.guardar(_CACHE_DOCENTES, filas, CACHE_TTL_DOCENTES_SEGUNDOS)
+
+    filas = sorted(filas, key=lambda docente: (_ORDEN_ROL.get(docente['rol'], len(ROLES_DOCENTE)), docente['id']))
+
+    return [construir_docente_dto(docente) for docente in filas]
 
 
 def buscar_docente_por_id(docente_id: int) -> dict:
@@ -45,6 +59,7 @@ def crear_docente(body: dict) -> dict:
     nuevo_id = db.insertar_docente(
         datos['nombre'], datos['apellido'], datos['email'], datos['rol'], foto_path
     )
+    cache.invalidar(_CACHE_DOCENTES)
 
     return buscar_docente_por_id(nuevo_id)
 
@@ -71,6 +86,7 @@ def actualizar_docente(docente_id: int, body: dict) -> dict:
     db.actualizar_docente(
         docente_id, datos['nombre'], datos['apellido'], datos['email'], datos['rol'], foto_path
     )
+    cache.invalidar(_CACHE_DOCENTES)
 
     return buscar_docente_por_id(docente_id)
 
@@ -80,6 +96,7 @@ def eliminar_docente_por_id(docente_id: int) -> None:
     docente = _obtener_docente_o_404(docente_id)
 
     db.eliminar_docente(docente_id)
+    cache.invalidar(_CACHE_DOCENTES)
     borrar_imagen(docente['foto'])
 
 

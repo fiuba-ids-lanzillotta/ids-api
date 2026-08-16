@@ -54,6 +54,8 @@ ids-api/
 │   ├── config.py                # Configuración de entorno (Supabase, JWT, admin, CORS)
 │   ├── db.py                    # Capa de acceso a datos (cliente de Supabase)
 │   ├── utils.py                 # Validaciones, bcrypt, JWT, @requiere_auth
+│   ├── cache.py                 # Cache-aside en Redis (Upstash) con invalidación
+│   ├── ratelimit.py             # Rate limiting por IP (Upstash), fail-open
 │   ├── routes/                  # Un blueprint por recurso
 │   │   ├── auth.py              #   POST /login, GET /me
 │   │   ├── docentes.py          #   CRUD de docentes
@@ -109,8 +111,10 @@ CORS_ORIGINS=*             # orígenes permitidos (coma-separados); en prod, el 
 | `ADMIN_USER`     | Usuario del panel de administración (único usuario).                        |
 | `ADMIN_PASSWORD` | **Hash bcrypt** del password del admin (no el password en texto plano).     |
 | `CORS_ORIGINS`   | Orígenes permitidos para CORS, separados por coma (default `*` = todos).     |
-| `CACHE_MAX_AGE`  | Segundos de cache en el CDN para los GET públicos (default `300`; `0` desactiva). |
+| `CACHE_TTL_CRONOGRAMA` / `CACHE_TTL_DOCENTES` | TTL (segundos) del cache en Redis por recurso (default `300`; se invalida en cada escritura). Requiere Upstash. |
 | `API_KEY`        | Si tiene valor, exige el header `X-API-Key` en toda request (restringe el consumo al frontend). Vacío = API pública. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Credenciales de Upstash (REST) para el rate limiting y el cache. Vacío = ambos deshabilitados (fail-open). |
+| `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW` | Límite por IP: máximo de requests por ventana en segundos (default `100`/`60`). |
 
 > El `.env` está en `.gitignore` y **no debe subirse al repositorio**.
 

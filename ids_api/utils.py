@@ -11,7 +11,6 @@ from .config import (
     JWT_SECRET,
     JWT_ALGORITHM,
     JWT_EXPIRACION_HORAS,
-    CACHE_SEGUNDOS,
 )
 from .constants import (
     FECHA_ISO_FORMATO,
@@ -50,15 +49,13 @@ def construir_error_api(code: str, message: str, description: str, level: str = 
 # Cache HTTP (CDN)
 # ---------------------------------------------------------------
 
-def con_cache(respuesta, segundos: int = CACHE_SEGUNDOS):
+def sin_cache(respuesta):
     """
-    Agrega headers de cache a una respuesta GET para que el CDN (Vercel) la sirva
-    desde el edge sin invocar la función. Si segundos <= 0, no cachea.
+    Marca la respuesta como no cacheable por el CDN. El cache lo maneja Redis
+    (cache-aside con invalidación por escritura), así que evitamos que el edge
+    sirva data vieja tras una modificación.
     """
-    if segundos > 0:
-        respuesta.headers['Cache-Control'] = (
-            f'public, max-age=60, s-maxage={segundos}, stale-while-revalidate={segundos * 2}'
-        )
+    respuesta.headers['Cache-Control'] = 'no-store'
 
     return respuesta
 

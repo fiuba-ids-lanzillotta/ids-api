@@ -33,11 +33,21 @@ SUPABASE_BUCKET_DOCENTES = os.getenv('SUPABASE_BUCKET_DOCENTES', 'docentes-fotos
 # en producción conviene restringirlo al dominio del frontend.
 CORS_ORIGINS = [origen.strip() for origen in os.getenv('CORS_ORIGINS', '*').split(',') if origen.strip()]
 
-# Segundos de cache en el CDN para los GET públicos (Vercel usa s-maxage para
-# servir desde el edge sin invocar la función). 0 desactiva el cache.
-CACHE_SEGUNDOS = int(os.getenv('CACHE_MAX_AGE', '300'))
-
 # API key para restringir el consumo al frontend (ids-web). Si está vacía, la
 # verificación queda deshabilitada (la API es pública). Si tiene valor, todas
 # las requests deben enviar el header X-API-Key con ese valor.
 API_KEY = os.getenv('API_KEY', '')
+
+# Upstash Redis (REST): backend compartido para rate limiting y cache. Si no hay
+# credenciales, ambos quedan deshabilitados (fail-open).
+UPSTASH_REDIS_REST_URL   = os.getenv('UPSTASH_REDIS_REST_URL', '')
+UPSTASH_REDIS_REST_TOKEN = os.getenv('UPSTASH_REDIS_REST_TOKEN', '')
+
+# Rate limiting: límite por IP (RATE_LIMIT_MAX requests por RATE_LIMIT_WINDOW seg).
+RATE_LIMIT_MAXIMO           = int(os.getenv('RATE_LIMIT_MAX', '100'))
+RATE_LIMIT_VENTANA_SEGUNDOS = int(os.getenv('RATE_LIMIT_WINDOW', '60'))
+
+# Cache en Redis (cache-aside con invalidación explícita en cada escritura). Los
+# TTL son una red de seguridad por si se pierde una invalidación; uno por recurso.
+CACHE_TTL_CRONOGRAMA_SEGUNDOS = int(os.getenv('CACHE_TTL_CRONOGRAMA', '300'))
+CACHE_TTL_DOCENTES_SEGUNDOS   = int(os.getenv('CACHE_TTL_DOCENTES', '300'))

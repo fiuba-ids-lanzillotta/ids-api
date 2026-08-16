@@ -22,11 +22,22 @@ python app.py
 
 Requires a `.env` (see `.env.example`): `SUPABASE_URL`, `SUPABASE_KEY`, `JWT_SECRET`,
 `ADMIN_USER`, `ADMIN_PASSWORD` (bcrypt hash), optional `CORS_ORIGINS`, `JWT_EXPIRACION_HORAS`,
-`SUPABASE_BUCKET_DOCENTES`, `CACHE_MAX_AGE`, `API_KEY`. The API is mounted under `/ids_api`.
+`SUPABASE_BUCKET_DOCENTES`, `API_KEY`, and for Upstash Redis (rate limiting + cache):
+`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`,
+`CACHE_TTL_CRONOGRAMA`, `CACHE_TTL_DOCENTES`. The API is mounted under `/ids_api`.
 
 `API_KEY` (if set) restricts consumption to the frontend: every request must send `X-API-Key`
 with that value. It is shared with `ids-web` and the Bruno collection — rotate it in all of them
 at once (see the `manage-secrets` skill).
+
+**Redis (Upstash, REST)** powers two features, both **env-gated** (disabled without credentials)
+and **fail-open** (never break the request if Redis is down):
+- **Rate limiting** per IP (`before_request` in `app.py` → `ratelimit.py`). With a server-rendered
+  frontend, all its traffic shares one IP, so set `RATE_LIMIT_MAX` accordingly.
+- **Cache** (`cache.py`): cache-aside for the GETs (`cronograma:clases`, `docentes:filas`),
+  **invalidated on every write**. Photos are NOT cached in Redis (only the path); they come from
+  the bucket via the in-process `lru_cache` in `services/storage.py`. The public GETs are
+  `Cache-Control: no-store` (no CDN caching) so invalidation takes effect immediately.
 
 ## Verification (run before considering a change done)
 

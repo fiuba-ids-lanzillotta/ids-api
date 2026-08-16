@@ -11,6 +11,12 @@ info:
     vía JWT (`Authorization: Bearer <token>`).
 
     Todos los endpoints cuelgan del prefijo `/ids_api`.
+
+    Comportamientos transversales (según configuración del backend):
+    - Si hay una API key configurada, **toda** request debe enviar el header
+      `X-API-Key`; si falta o es inválida, se responde `401`.
+    - Si hay rate limiting configurado (Upstash), superar el límite por IP
+      responde `429`.
   version: 1.0.0
 servers:
   - url: http://localhost:5000/ids_api
@@ -342,7 +348,7 @@ components:
       properties:
         token:
           type: string
-          description: JWT firmado con HS256. Enviar en el header Authorization: Bearer <token>
+          description: "JWT firmado con HS256. Enviar en el header Authorization: Bearer <token>"
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         usuario:
           $ref: '#/components/schemas/Identidad'
@@ -552,3 +558,10 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT firmado con HS256. Obtenido en POST /login.
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: >-
+        API key para restringir el consumo al frontend. Requerida en toda
+        request solo si el backend tiene configurada una API key.

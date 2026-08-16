@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from ..constants import ROL_ADMIN, ERROR_CODE_DOCENTE_NOT_FOUND
-from ..utils import requiere_auth, construir_error_api, validar_entero, validar_minimo, con_cache
+from ..utils import requiere_auth, construir_error_api, validar_entero, validar_minimo, sin_cache
 from ..services.docentes import (
     listar_docentes,
     buscar_docente_por_id,
@@ -25,7 +25,7 @@ def get_docentes():
             description='No hay docentes cargados'
         )), 404
 
-    return con_cache(jsonify(docentes))
+    return sin_cache(jsonify(docentes))
 
 
 @docentes_bp.route('/docentes/<docente_id>', methods=['GET'])
@@ -38,7 +38,7 @@ def get_docente(docente_id):
 
         return jsonify(error.args[0]), status
 
-    return con_cache(jsonify(docente))
+    return sin_cache(jsonify(docente))
 
 
 @docentes_bp.route('/docentes', methods=['POST'])
