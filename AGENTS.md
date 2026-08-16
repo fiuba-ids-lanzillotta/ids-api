@@ -54,6 +54,8 @@ in order to import/test.
 ## Code conventions
 
 - **Functional style: do NOT use classes.** DTOs and payloads are `dict`.
+- **Avoid `break`/`continue`/`pass`** unless strictly necessary or unavoidable (e.g. `pass` in an
+  `except`); prefer clear `if`/`else` or `try/except/else`.
 - **Spanish naming, no abbreviations** (self-explanatory variables: `error` not `e`,
   `respuesta` not `r`, `indice_semana` not `w`, etc.). The domain vocabulary stays in Spanish.
 - **Layers**: `routes → services → validators → db`. Routes hold no business logic; the `db`

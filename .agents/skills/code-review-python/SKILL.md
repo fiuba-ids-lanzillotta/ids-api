@@ -59,6 +59,8 @@ naming patterns, and architectural rules defined there.
 2. If an improvement is blocked, **do not implement it** — document it as a suggestion with context.
 3. Do not introduce over-engineering or unnecessary patterns.
 4. **Do NOT introduce classes** (this project is intentionally functional; DTOs are `dict`).
+5. **Avoid `break`/`continue`/`pass`** unless strictly necessary or unavoidable (e.g. `pass` in an
+   `except`); prefer clear `if`/`else` or `try/except/else`.
 
 ## Production code review criteria (`ids_api/`)
 

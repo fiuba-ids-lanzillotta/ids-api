@@ -364,18 +364,17 @@ def _parsear_csv(contenido: str) -> list[dict]:
                 detalle = dict(detalle)
                 detalle['description'] = f"Fila {nro_fila}: {detalle['description']}"
                 errores.append(detalle)
-            continue
-
-        if datos['fecha'] in fechas_vistas:
-            errores.append(construir_error_api(
-                code=ERROR_CODE_FECHA_DUPLICADA,
-                message='Fecha duplicada',
-                description=f"Fila {nro_fila}: la fecha ya aparece en la fila {fechas_vistas[datos['fecha']]}"
-            )['errors'][0])
         else:
-            fechas_vistas[datos['fecha']] = nro_fila
+            if datos['fecha'] in fechas_vistas:
+                errores.append(construir_error_api(
+                    code=ERROR_CODE_FECHA_DUPLICADA,
+                    message='Fecha duplicada',
+                    description=f"Fila {nro_fila}: la fecha ya aparece en la fila {fechas_vistas[datos['fecha']]}"
+                )['errors'][0])
+            else:
+                fechas_vistas[datos['fecha']] = nro_fila
 
-        clases.append(datos)
+            clases.append(datos)
 
     if errores:
         raise ValueError({'errors': errores})
@@ -421,9 +420,10 @@ def _parsear_fila(campos: list[str]) -> dict:
     except ValueError as error:
         for detalle in error.args[0]['errors']:
             # No duplicar el error de fecha si ya lo reportamos arriba.
-            if fecha_iso is None and str(detalle.get('code', '')).startswith('invalid.fecha'):
-                continue
-            errores.append(detalle)
+            fecha_ya_reportada = fecha_iso is None and str(detalle.get('code', '')).startswith('invalid.fecha')
+            
+            if not fecha_ya_reportada:
+                errores.append(detalle)
 
     # Validaciones de dominio: la fecha debe ser un día de clase válido del
     # período y la semana informada debe coincidir con la calculada.
